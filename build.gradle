@@ -1,0 +1,43 @@
+buildscript {
+	apply plugin: 'project-report'
+	apply plugin: 'build-dashboard'
+	ext {
+		springBootVersion = '2.0.0.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'ai.trading'
+version = new Date().format('ddMMyyyy')
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+compileJava.options.encoding = 'UTF-8'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile('org.springframework.boot:spring-boot-starter-webflux')
+	compile('org.codehaus.groovy:groovy')
+	compile("joda-time:joda-time:2.9.9")
+	compile("com.google.guava:guava:23.0")
+	compile("com.typesafe.akka:akka-actor_2.11:2.5.7")
+	compile("com.github.paolodenti:telegram-logback:1.2.0")
+
+	compileOnly("org.projectlombok:lombok")
+
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('io.projectreactor:reactor-test')
+}
