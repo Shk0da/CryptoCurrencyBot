@@ -2,9 +2,9 @@ package ai.trading.bot.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.AbstractEnvironment;
-import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.PropertySource;
 
 import javax.annotation.PostConstruct;
@@ -22,21 +22,20 @@ public class PropertiesLogger {
         log.info("**** APPLICATION PROPERTIES SOURCES ****");
 
         Set<String> properties = new TreeSet<>();
-        for (PropertiesPropertySource p : findPropertiesPropertySources()) {
+        for (OriginTrackedMapPropertySource p : findPropertiesPropertySources()) {
             log.info(p.toString());
             properties.addAll(Arrays.asList(p.getPropertyNames()));
         }
 
         log.info("**** APPLICATION PROPERTIES VALUES ****");
         print(properties);
-
     }
 
-    private List<PropertiesPropertySource> findPropertiesPropertySources() {
-        List<PropertiesPropertySource> propertiesPropertySources = new LinkedList<>();
+    private List<OriginTrackedMapPropertySource> findPropertiesPropertySources() {
+        List<OriginTrackedMapPropertySource> propertiesPropertySources = new LinkedList<>();
         for (PropertySource<?> propertySource : environment.getPropertySources()) {
-            if (propertySource instanceof PropertiesPropertySource) {
-                propertiesPropertySources.add((PropertiesPropertySource) propertySource);
+            if (propertySource instanceof OriginTrackedMapPropertySource) {
+                propertiesPropertySources.add((OriginTrackedMapPropertySource) propertySource);
             }
         }
 

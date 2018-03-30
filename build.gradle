@@ -1,15 +1,15 @@
 buildscript {
-	apply plugin: 'project-report'
-	apply plugin: 'build-dashboard'
-	ext {
-		springBootVersion = '2.0.0.RELEASE'
-	}
-	repositories {
-		mavenCentral()
-	}
-	dependencies {
-		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-	}
+    apply plugin: 'project-report'
+    apply plugin: 'build-dashboard'
+    ext {
+        springBootVersion = '2.0.0.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
 }
 
 apply plugin: 'java'
@@ -25,19 +25,27 @@ targetCompatibility = 1.8
 compileJava.options.encoding = 'UTF-8'
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	compile('org.springframework.boot:spring-boot-starter-webflux')
-	compile('org.codehaus.groovy:groovy')
-	compile("joda-time:joda-time:2.9.9")
-	compile("com.google.guava:guava:23.0")
-	compile("com.typesafe.akka:akka-actor_2.11:2.5.7")
-	compile("com.github.paolodenti:telegram-logback:1.2.0")
+    compile('org.springframework.boot:spring-boot-starter-webflux')
+    compile('org.codehaus.groovy:groovy')
+    compile("joda-time:joda-time:2.9.9")
+    compile("com.google.guava:guava:23.0")
+    compile("com.typesafe.akka:akka-actor_2.11:2.5.7")
+    compile("com.github.paolodenti:telegram-logback:1.2.0")
 
-	compileOnly("org.projectlombok:lombok")
+    // bitfinex (@url https://github.com/jnidzwetzki/bitfinex-v2-wss-api-java/blob/master/EXAMPLES.md)
+    compile("com.github.jnidzwetzki:bitfinex-v2-wss-api:0.6.1") {
+        exclude group: 'ch.qos.logback'
+        exclude group: 'org.apache.logging.log4j'
+    }
+    // binance (@url https://github.com/webcerebrium/java-binance-api)
+    compile("com.webcerebrium:binance-api:1.0.9")
 
-	testCompile('org.springframework.boot:spring-boot-starter-test')
-	testCompile('io.projectreactor:reactor-test')
+    compileOnly("org.projectlombok:lombok")
+
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile('io.projectreactor:reactor-test')
 }
