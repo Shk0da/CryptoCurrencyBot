@@ -6,5 +6,5 @@
           http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
           http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-4.0.xsd">
     <lang:defaults refresh-check-delay="5000"/>
-    <lang:groovy name="strategy" script-source="${strategy.path}"/>
+    <lang:groovy name="strategy" script-source="${strategy.path:classpath:Strategy.groovy}"/>
 </beans>

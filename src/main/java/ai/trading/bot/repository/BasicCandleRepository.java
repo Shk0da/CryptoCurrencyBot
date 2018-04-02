@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class BasicCandleRepository implements CandleRepository {
 
     @Getter
-    @Value("${candle.repository.limit}")
+    @Value("${candle.repository.limit:21}")
     private Integer limit;
 
     private final Map<String, TreeMap<DateTime, Candle>> candles = Maps.newHashMap();
@@ -86,7 +86,7 @@ public class BasicCandleRepository implements CandleRepository {
         }
 
         return current.stream()
-                .filter(candle -> candle.getClose() > 0)
+                .filter(candle -> candle.getPrice() > 0)
                 .collect(Collectors.toMap(Candle::getDateTime, item -> item, (a, b) -> b, TreeMap::new));
     }
 }

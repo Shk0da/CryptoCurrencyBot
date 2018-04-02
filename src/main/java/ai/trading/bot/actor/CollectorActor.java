@@ -53,7 +53,7 @@ public class CollectorActor extends UntypedAbstractActor {
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList());
 
-                log.debug("{}::{} get {} candles.", market, instrument, candles.size());
+                log.debug("{}::{} add {} candles.", market, instrument, candles.size());
 
                 if (!candles.isEmpty()) {
                     candleRepository.addCandles(instrument, candles);
