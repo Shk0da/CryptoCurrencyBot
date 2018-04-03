@@ -9,10 +9,22 @@ import java.util.List;
 
 @Service
 public interface AccountService {
+
     Boolean getTradeIsAllowed();
+
+    void setTradeIsAllowed(Boolean val);
+
     CandleRepository candleRepository();
+
     List<Candle> getCandles(String symbol);
+
     Object createOrder(Order order);
+
     Object cancelOrder(String symbol, Long orderId);
+
     Object getInfo();
+
+    List<Object> getActiveOrders(int limit);
+
+    List<Object> getHistoryOrders(int limit);
 }

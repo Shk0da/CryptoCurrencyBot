@@ -2,6 +2,7 @@ package ai.trading.bot.service.binance;
 
 import ai.trading.bot.domain.Candle;
 import ai.trading.bot.domain.Order;
+import ai.trading.bot.provider.ApplicationContextProvider;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
@@ -105,6 +106,22 @@ public class BinanceAccountService implements AccountService {
 
     @Override
     public Object cancelOrder(String symbol, Long orderId) {
+        try {
+            String query = "symbol=" + symbol;
+            if (orderId != null && orderId > 0) {
+                query += "&orderId=" + orderId;
+            }
+            return restTemplate
+                    .exchange(
+                            BASE_URL_V3 + "order?" + query + getSignatureParam(query),
+                            HttpMethod.DELETE,
+                            new HttpEntity<>(getAuthHeader()),
+                            Object.class
+                    ).getBody();
+        } catch (HttpClientErrorException ex) {
+            log.error(ex.getResponseBodyAsString());
+        }
+
         return null;
     }
 
@@ -132,6 +149,64 @@ public class BinanceAccountService implements AccountService {
     public Object getInfo() {
         try {
             return sendGetRequest("account").getBody();
+        } catch (HttpClientErrorException ex) {
+            log.error(ex.getResponseBodyAsString());
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Object> getActiveOrders(int limit) {
+        try {
+            String symbolProperties = ApplicationContextProvider.getApplicationContext()
+                    .getEnvironment()
+                    .getProperty("binance.symbols");
+            if (symbolProperties == null || symbolProperties.isEmpty()) return null;
+
+            List<Object> result = Lists.newArrayList();
+            List<String> symbols = Lists.newArrayList(symbolProperties.split(";"));
+            symbols.forEach(symbol -> {
+                String query = "symbol=" + symbol + "&limit=" + limit;
+                result.addAll(restTemplate
+                        .exchange(
+                                BASE_URL_V1 + "trades?" + query + getSignatureParam(query),
+                                HttpMethod.GET,
+                                new HttpEntity<>(getAuthHeader()),
+                                List.class
+                        ).getBody());
+            });
+
+            return result;
+        } catch (HttpClientErrorException ex) {
+            log.error(ex.getResponseBodyAsString());
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Object> getHistoryOrders(int limit) {
+        try {
+            String symbolProperties = ApplicationContextProvider.getApplicationContext()
+                    .getEnvironment()
+                    .getProperty("binance.symbols");
+            if (symbolProperties == null || symbolProperties.isEmpty()) return null;
+
+            List<Object> result = Lists.newArrayList();
+            List<String> symbols = Lists.newArrayList(symbolProperties.split(";"));
+            symbols.forEach(symbol -> {
+                String query = "symbol=" + symbol + "&limit=" + limit;
+                result.addAll(restTemplate
+                        .exchange(
+                                BASE_URL_V1 + "historicalTrades?" + query + getSignatureParam(query),
+                                HttpMethod.GET,
+                                new HttpEntity<>(getAuthHeader()),
+                                List.class
+                        ).getBody());
+            });
+
+            return result;
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         }

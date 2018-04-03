@@ -140,6 +140,6 @@ class Strategy implements StrategyService {
 
     @Async
     def LTCUSDandLTCUSDT() {
-
+        // method body
     }
 }

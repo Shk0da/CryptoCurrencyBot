@@ -103,6 +103,14 @@ public class BitfinexAccountService implements AccountService {
 
     @Override
     public Object cancelOrder(String symbol, Long orderId) {
+        try {
+            JsonObject json = new JsonObject();
+            json.addProperty("id", orderId);
+            return sendPostRequest("order/cancel", json).getBody();
+        } catch (HttpClientErrorException ex) {
+            log.error(ex.getResponseBodyAsString());
+        }
+
         return null;
     }
 
@@ -110,6 +118,28 @@ public class BitfinexAccountService implements AccountService {
     public Object getInfo() {
         try {
             return sendPostRequest("account_infos").getBody();
+        } catch (HttpClientErrorException ex) {
+            log.error(ex.getResponseBodyAsString());
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Object> getActiveOrders(int limit) {
+        try {
+            return ((List<Object>) sendPostRequest("orders").getBody()).subList(0, limit);
+        } catch (HttpClientErrorException ex) {
+            log.error(ex.getResponseBodyAsString());
+        }
+
+        return null;
+    }
+
+    @Override
+    public List<Object> getHistoryOrders(int limit) {
+        try {
+            return (List<Object>) sendPostRequest("orders/hist?limit=" + limit).getBody();
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         }

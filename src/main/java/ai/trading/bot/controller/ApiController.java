@@ -29,6 +29,18 @@ public class ApiController {
     @Qualifier("bitfinexAccountService")
     private AccountService bitfinexAccountService;
 
+    @GetMapping(value = "/trading", params = {"active"})
+    public ResponseEntity<String> trading(Boolean active) {
+        try {
+            binanceAccountService.setTradeIsAllowed(active);
+            bitfinexAccountService.setTradeIsAllowed(active);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>("Successful!", HttpStatus.OK);
+    }
+
     @GetMapping(value = "/status")
     public ResponseEntity<Map<StockMarket, Object>> status() {
         Map<StockMarket, Object> status = new HashMap<StockMarket, Object>() {{
@@ -53,5 +65,29 @@ public class ApiController {
         }
 
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/orders/active", params = {"market", "limit"})
+    public ResponseEntity<List<Object>> ordersActive(StockMarket market, int limit) {
+        switch (market) {
+            case Binance:
+                return new ResponseEntity<>(binanceAccountService.getActiveOrders(limit), HttpStatus.OK);
+            case BitFinex:
+                return new ResponseEntity<>(bitfinexAccountService.getActiveOrders(limit), HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping(value = "/orders/history", params = {"market", "limit"})
+    public ResponseEntity<Object> ordersHistory(StockMarket market, int limit) {
+        switch (market) {
+            case Binance:
+                return new ResponseEntity<>(binanceAccountService.getHistoryOrders(limit), HttpStatus.OK);
+            case BitFinex:
+                return new ResponseEntity<>(bitfinexAccountService.getHistoryOrders(limit), HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 }
