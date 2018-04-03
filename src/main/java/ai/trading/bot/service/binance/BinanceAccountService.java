@@ -7,6 +7,8 @@ import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
@@ -23,8 +25,8 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service("binanceAccountService")
@@ -42,6 +44,11 @@ public class BinanceAccountService implements AccountService {
     @Autowired
     @Qualifier("binanceCandleRepository")
     private CandleRepository binanceCandleRepository;
+
+    @Setter
+    @Getter
+    @Value("${binance.trade.allowed:true}")
+    private volatile Boolean tradeIsAllowed;
 
     private final JsonParser jsonParser = new JsonParser();
     private final RestTemplate restTemplate = new RestTemplate();
@@ -82,12 +89,22 @@ public class BinanceAccountService implements AccountService {
     }
 
     @Override
-    public Map<String, Object> createOrder(Order order) {
+    public Object createOrder(Order order) {
+        if (!tradeIsAllowed) return new HashMap<String, String>() {{
+            put("tradeIsAllowed", "false");
+        }};
+
+        try {
+            return sendPostRequest("order", order.toQuery()).getBody();
+        } catch (HttpClientErrorException ex) {
+            log.error(ex.getResponseBodyAsString());
+        }
+
         return null;
     }
 
     @Override
-    public Map<String, Object> cancelOrder(String symbol, Long orderId) {
+    public Object cancelOrder(String symbol, Long orderId) {
         return null;
     }
 
@@ -131,6 +148,16 @@ public class BinanceAccountService implements AccountService {
                 .exchange(
                         BASE_URL_V3 + uri + "?" + query + getSignatureParam(query),
                         HttpMethod.GET,
+                        new HttpEntity<>(getAuthHeader()),
+                        Object.class
+                );
+    }
+
+    private ResponseEntity<Object> sendPostRequest(String uri, String query) {
+        return restTemplate
+                .exchange(
+                        BASE_URL_V3 + uri + "?" + query + getSignatureParam(query),
+                        HttpMethod.POST,
                         new HttpEntity<>(getAuthHeader()),
                         Object.class
                 );

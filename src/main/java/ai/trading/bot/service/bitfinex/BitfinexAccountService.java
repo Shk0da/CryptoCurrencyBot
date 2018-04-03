@@ -7,6 +7,8 @@ import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +28,8 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service("bitfinexAccountService")
@@ -44,6 +46,11 @@ public class BitfinexAccountService implements AccountService {
     @Autowired
     @Qualifier("bitfinexCandleRepository")
     private CandleRepository bitfinexCandleRepository;
+
+    @Setter
+    @Getter
+    @Value("${bitfinex.trade.allowed:true}")
+    private volatile Boolean tradeIsAllowed;
 
     private final JsonParser jsonParser = new JsonParser();
     private final RestTemplate restTemplate = new RestTemplate();
@@ -80,12 +87,22 @@ public class BitfinexAccountService implements AccountService {
     }
 
     @Override
-    public Map<String, Object> createOrder(Order order) {
+    public Object createOrder(Order order) {
+        if (!tradeIsAllowed) return new HashMap<String, String>() {{
+            put("tradeIsAllowed", "false");
+        }};
+
+        try {
+            return sendPostRequest("order/new", order.toJsonObject()).getBody();
+        } catch (HttpClientErrorException ex) {
+            log.error(ex.getResponseBodyAsString());
+        }
+
         return null;
     }
 
     @Override
-    public Map<String, Object> cancelOrder(String symbol, Long orderId) {
+    public Object cancelOrder(String symbol, Long orderId) {
         return null;
     }
 
@@ -107,7 +124,7 @@ public class BitfinexAccountService implements AccountService {
     private ResponseEntity<Object> sendPostRequest(String uri, JsonObject data) {
         JsonObject body = new JsonObject();
         body.addProperty("request", "/v1/" + uri);
-        body.addProperty("nonce", "" + System.currentTimeMillis());
+        body.addProperty("nonce", Long.toString(DateTime.now().getMillis()));
         if (data != null && data.size() > 0) {
             data.keySet().forEach(key -> body.addProperty(key, data.get(key).getAsString()));
         }

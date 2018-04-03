@@ -1,3 +1,5 @@
+import ai.trading.bot.domain.Order
+import ai.trading.bot.service.AccountService
 import ai.trading.bot.service.StrategyService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,22 +13,22 @@ import org.springframework.scheduling.annotation.Scheduled
  */
 class Strategy implements StrategyService {
 
-    double diff = 5 // in USD
+    double diff = 1 // in USD
     double lot = 0.000001 // in BTC
 
     @Autowired
     @Qualifier("binanceAccountService")
-    def binanceAccountService
+    AccountService binanceAccountService
 
     @Autowired
     @Qualifier("bitfinexAccountService")
-    def bitfinexAccountService
+    AccountService bitfinexAccountService
 
     def lastUpdateBtcUsd
     def log = LoggerFactory.getLogger(Strategy.class)
 
     Strategy() {
-        log.info "Strategy loaded successful! With param: diff = " + diff + "USD, lot = " + lot + "BTC"
+        log.info String.format("Strategy loaded successful! With param: diff = %.2fUSD, lot = %fBTC", diff, lot)
     }
 
     /**
@@ -52,18 +54,86 @@ class Strategy implements StrategyService {
         // Если {цена продажи} BTCUSDT больше {цена покупки} BTCUSD чем {diff}
         if (BTCUSDT.bid - BTCUSD.ask >= diff) {
             log.info "--------------------------------------------------"
-            log.info "We have new DIFF: " + (BTCUSDT.bid - BTCUSD.ask) + "USD"
+            log.info "We have new DIFF: " + String.format("%.2f", BTCUSDT.bid - BTCUSD.ask) + "USD"
             log.info "BTCUSDT:" + BTCUSDT.bid + "; BTCUSD:" + BTCUSD.ask
-            log.info "Do arbitrage: " + lot + " BTC"
+            log.info "Do arbitrage: " + String.format("%f", lot) + "BTC"
+            log.info "--------------------------------------------------"
+
+            def sellResult = binanceAccountService.createOrder(Order.builder()
+                    .symbol("BTCUSDT")
+                    .side(Order.Side.SELL)
+                    .type(Order.Type.MARKET)
+                    .quantity(lot)
+                    .build())
+
+            log.info "------------- BTCUSDT SELL RESULT ----------------"
+            if (sellResult == null || sellResult.isEmpty()) {
+                log.info "Something wrong! Break..."
+                log.info "--------------------------------------------------"
+                return
+            } else {
+                sellResult.each { key, val -> log.info "${key}: ${val}" }
+            }
+            log.info "--------------------------------------------------"
+
+            def buyResult = bitfinexAccountService.createOrder(Order.builder()
+                    .symbol("BTCUSD")
+                    .side(Order.Side.BUY)
+                    .type(Order.Type.MARKET)
+                    .quantity(lot)
+                    .build())
+
+            log.info "-------------- BTCUSD BUY RESULT -----------------"
+            if (buyResult == null || buyResult.isEmpty()) {
+                log.info "Something wrong! Break..."
+                log.info "--------------------------------------------------"
+                return
+            } else {
+                buyResult.each { key, val -> log.info "${key}: ${val}" }
+            }
             log.info "--------------------------------------------------"
         }
 
         // Если {цена продажи} BTCUSD больше {цена покупки} BTCUSDT чем {diff}
         if (BTCUSD.bid - BTCUSDT.ask >= diff) {
             log.info "--------------------------------------------------"
-            log.info "We have new DIFF: " + (BTCUSD.bid - BTCUSDT.ask) + "USD"
+            log.info "We have new DIFF: " + String.format("%.2f", BTCUSD.bid - BTCUSDT.ask) + "USD"
             log.info "BTCUSD:" + BTCUSD.bid + "; BTCUSDT:" + BTCUSDT.ask
-            log.info "Do arbitrage: " + lot + " BTC"
+            log.info "Do arbitrage: " + String.format("%f", lot) + "BTC"
+            log.info "--------------------------------------------------"
+
+            def sellResult = bitfinexAccountService.createOrder(Order.builder()
+                    .symbol("BTCUSD")
+                    .side(Order.Side.SELL)
+                    .type(Order.Type.MARKET)
+                    .quantity(lot)
+                    .build())
+
+            log.info "-------------- BTCUSD SELL RESULT ----------------"
+            if (sellResult == null || sellResult.isEmpty()) {
+                log.info "Something wrong! Break..."
+                log.info "--------------------------------------------------"
+                return
+            } else {
+                sellResult.each { key, val -> log.info "${key}: ${val}" }
+            }
+            log.info "--------------------------------------------------"
+
+            def buyResult = binanceAccountService.createOrder(Order.builder()
+                    .symbol("BTCUSDT")
+                    .side(Order.Side.BUY)
+                    .type(Order.Type.MARKET)
+                    .quantity(lot)
+                    .build())
+
+            log.info "------------- BTCUSDT BUY RESULT -----------------"
+            if (buyResult == null || buyResult.isEmpty()) {
+                log.info "Something wrong! Break..."
+                log.info "--------------------------------------------------"
+                return
+            } else {
+                buyResult.each { key, val -> log.info "${key}: ${val}" }
+            }
             log.info "--------------------------------------------------"
         }
     }
