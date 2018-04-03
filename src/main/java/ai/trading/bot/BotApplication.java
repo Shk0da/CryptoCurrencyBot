@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAutoConfiguration
 public class BotApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(BotApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BotApplication.class, args);
+    }
 }

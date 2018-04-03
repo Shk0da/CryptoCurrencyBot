@@ -42,4 +42,6 @@ dependencies {
 
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('io.projectreactor:reactor-test')
+
+    compile("org.springframework.boot:spring-boot-devtools")
 }
