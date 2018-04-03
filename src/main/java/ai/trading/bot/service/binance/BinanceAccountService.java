@@ -2,6 +2,7 @@ package ai.trading.bot.service.binance;
 
 import ai.trading.bot.domain.Candle;
 import ai.trading.bot.domain.Order;
+import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
@@ -9,6 +10,8 @@ import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -36,8 +39,17 @@ public class BinanceAccountService implements AccountService {
     @Value("${binance.secret.key}")
     private String secretKey;
 
+    @Autowired
+    @Qualifier("binanceCandleRepository")
+    private CandleRepository binanceCandleRepository;
+
     private final JsonParser jsonParser = new JsonParser();
     private final RestTemplate restTemplate = new RestTemplate();
+
+    @Override
+    public CandleRepository candleRepository() {
+        return binanceCandleRepository;
+    }
 
     @Override
     public List<Candle> getCandles(String symbol) {
@@ -102,22 +114,26 @@ public class BinanceAccountService implements AccountService {
     @Override
     public Object getInfo() {
         try {
-            String query = "recvWindow=10000&timestamp=" + getServerTime();
-            ResponseEntity<Object> responseInfo = restTemplate
-                    .exchange(
-                            BASE_URL_V3 + "account?" + query + getSignatureParam(query),
-                            HttpMethod.GET,
-                            new HttpEntity<>(getAuthHeader()),
-                            Object.class
-                    );
-
-            // TODO JsonConvert
-            return jsonParser.parse(responseInfo.getBody().toString());
+            return sendGetRequest("account").getBody();
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         }
 
         return null;
+    }
+
+    private ResponseEntity<Object> sendGetRequest(String uri) {
+        return sendGetRequest(uri, "");
+    }
+
+    private ResponseEntity<Object> sendGetRequest(String uri, String query) {
+        return restTemplate
+                .exchange(
+                        BASE_URL_V3 + uri + "?" + query + getSignatureParam(query),
+                        HttpMethod.GET,
+                        new HttpEntity<>(getAuthHeader()),
+                        Object.class
+                );
     }
 
     private HttpHeaders getAuthHeader() {
@@ -129,8 +145,13 @@ public class BinanceAccountService implements AccountService {
         return headers;
     }
 
+    private String getSignatureParam() {
+        return getSignatureParam("");
+    }
+
     private String getSignatureParam(String payload) {
-        return "&signature=" + getSignature(payload, secretKey);
+        String query = "recvWindow=15000&timestamp=" + getServerTime();
+        return query + "&signature=" + getSignature(payload + query, secretKey);
     }
 
     private String getSignature(String payload, String secretKey) {

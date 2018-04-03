@@ -1,7 +1,6 @@
 package ai.trading.bot.controller;
 
 import ai.trading.bot.domain.Candle;
-import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.service.AccountService;
 import ai.trading.bot.service.StockMarket;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +29,6 @@ public class ApiController {
     @Qualifier("bitfinexAccountService")
     private AccountService bitfinexAccountService;
 
-    @Autowired
-    @Qualifier("binanceCandleRepository")
-    private CandleRepository binanceCandleRepository;
-
-    @Autowired
-    @Qualifier("bitfinexCandleRepository")
-    private CandleRepository bitfinexCandleRepository;
-
     @GetMapping(value = "/status")
     public ResponseEntity<Map<StockMarket, Object>> status() {
         Map<StockMarket, Object> status = new HashMap<StockMarket, Object>() {{
@@ -52,10 +43,10 @@ public class ApiController {
         List<Candle> result;
         switch (StockMarket.valueOf(market)) {
             case BitFinex:
-                result = bitfinexCandleRepository.getLastCandles(symbol, limit);
+                result = bitfinexAccountService.candleRepository().getLastCandles(symbol, limit);
                 break;
             case Binance:
-                result = binanceCandleRepository.getLastCandles(symbol, limit);
+                result = binanceAccountService.candleRepository().getLastCandles(symbol, limit);
                 break;
             default:
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);

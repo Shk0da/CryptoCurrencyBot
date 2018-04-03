@@ -2,15 +2,20 @@ package ai.trading.bot.service.bitfinex;
 
 import ai.trading.bot.domain.Candle;
 import ai.trading.bot.domain.Order;
+import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -28,7 +33,7 @@ import java.util.Map;
 @Service("bitfinexAccountService")
 public class BitfinexAccountService implements AccountService {
 
-    public static final String BASE_URL = "https://api.bitfinex.com/v1/";
+    public static final String BASE_URL = "https://api.bitfinex.com";
 
     @Value("${bitfinex.api.key}")
     private String apiKey;
@@ -36,15 +41,24 @@ public class BitfinexAccountService implements AccountService {
     @Value("${bitfinex.secret.key}")
     private String secretKey;
 
+    @Autowired
+    @Qualifier("bitfinexCandleRepository")
+    private CandleRepository bitfinexCandleRepository;
+
     private final JsonParser jsonParser = new JsonParser();
     private final RestTemplate restTemplate = new RestTemplate();
+
+    @Override
+    public CandleRepository candleRepository() {
+        return bitfinexCandleRepository;
+    }
 
     @Override
     public List<Candle> getCandles(String symbol) {
         Candle candle = null;
         try {
             String jsonBody = restTemplate
-                    .getForEntity(BASE_URL + "pubticker/" + symbol, String.class)
+                    .getForEntity(BASE_URL + "/v1/pubticker/" + symbol, String.class)
                     .getBody();
             JsonObject response = (JsonObject) jsonParser.parse(jsonBody);
 
@@ -78,15 +92,33 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public Object getInfo() {
         try {
-            String jsonInfo = restTemplate
-                    .postForEntity(BASE_URL + "balances", new HttpEntity<>(getAuthHeader()), String.class)
-                    .getBody();
-            return jsonParser.parse(jsonInfo);
+            return sendPostRequest("account_infos").getBody();
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         }
 
         return null;
+    }
+
+    private ResponseEntity<Object> sendPostRequest(String uri) {
+        return sendPostRequest(uri, null);
+    }
+
+    private ResponseEntity<Object> sendPostRequest(String uri, JsonObject data) {
+        JsonObject body = new JsonObject();
+        body.addProperty("request", "/v1/" + uri);
+        body.addProperty("nonce", "" + System.currentTimeMillis());
+        if (data != null && data.size() > 0) {
+            data.keySet().forEach(key -> body.addProperty(key, data.get(key).getAsString()));
+        }
+
+        return restTemplate
+                .exchange(
+                        BASE_URL + "/v1/" + uri,
+                        HttpMethod.POST,
+                        new HttpEntity<>(body.toString(), getAuthHeader(body)),
+                        Object.class
+                );
     }
 
     private HttpHeaders getAuthHeader() {
