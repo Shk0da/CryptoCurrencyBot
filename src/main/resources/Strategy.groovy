@@ -22,6 +22,7 @@ class Strategy implements StrategyService {
     @Qualifier("bitfinexAccountService")
     def bitfinexAccountService
 
+    def lastUpdateBtcUsd
     def log = LoggerFactory.getLogger(Strategy.class)
 
     Strategy() {
@@ -43,6 +44,10 @@ class Strategy implements StrategyService {
         def BTCUSDT = binanceAccountService.candleRepository().getLastCandle("BTCUSDT")
         def BTCUSD = bitfinexAccountService.candleRepository().getLastCandle("BTCUSD")
         if (BTCUSDT == null || BTCUSD == null) return
+
+        // время пары свечей
+        def candleDateTime = BTCUSDT.dateTime.isAfter(BTCUSD.dateTime) ? BTCUSDT.dateTime : BTCUSD.dateTime
+        if (candleDateTime == lastUpdateBtcUsd) return else lastUpdateBtcUsd = candleDateTime
 
         // Если {цена продажи} BTCUSDT больше {цена покупки} BTCUSD чем {diff}
         if (BTCUSDT.bid - BTCUSD.ask >= diff) {
