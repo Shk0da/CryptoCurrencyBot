@@ -249,10 +249,10 @@ public class BinanceAccountService implements AccountService {
 
     private String getSignature(String payload, String secretKey) {
         try {
-            Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
+            Mac mac = Mac.getInstance("HmacSHA256");
             SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
-            sha256_HMAC.init(secretKeySpec);
-            return new String(Hex.encodeHex(sha256_HMAC.doFinal(payload.getBytes())));
+            mac.init(secretKeySpec);
+            return new String(Hex.encodeHex(mac.doFinal(payload.getBytes())));
         } catch (Exception e) {
             throw new RuntimeException("Unable to sign message.", e);
         }
