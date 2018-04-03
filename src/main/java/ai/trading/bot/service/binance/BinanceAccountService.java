@@ -2,8 +2,8 @@ package ai.trading.bot.service.binance;
 
 import ai.trading.bot.domain.Candle;
 import ai.trading.bot.domain.Order;
-import ai.trading.bot.provider.ApplicationContextProvider;
 import ai.trading.bot.repository.CandleRepository;
+import ai.trading.bot.repository.InstrumentRepository;
 import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
@@ -45,6 +45,9 @@ public class BinanceAccountService implements AccountService {
     @Autowired
     @Qualifier("binanceCandleRepository")
     private CandleRepository binanceCandleRepository;
+
+    @Autowired
+    private InstrumentRepository instrumentRepository;
 
     @Setter
     @Getter
@@ -159,14 +162,8 @@ public class BinanceAccountService implements AccountService {
     @Override
     public List<Object> getActiveOrders(int limit) {
         try {
-            String symbolProperties = ApplicationContextProvider.getApplicationContext()
-                    .getEnvironment()
-                    .getProperty("binance.symbols");
-            if (symbolProperties == null || symbolProperties.isEmpty()) return null;
-
             List<Object> result = Lists.newArrayList();
-            List<String> symbols = Lists.newArrayList(symbolProperties.split(";"));
-            symbols.forEach(symbol -> {
+            instrumentRepository.getBinanceSymbols().forEach(symbol -> {
                 String query = "symbol=" + symbol + "&limit=" + limit;
                 result.addAll(restTemplate
                         .exchange(
@@ -188,14 +185,8 @@ public class BinanceAccountService implements AccountService {
     @Override
     public List<Object> getHistoryOrders(int limit) {
         try {
-            String symbolProperties = ApplicationContextProvider.getApplicationContext()
-                    .getEnvironment()
-                    .getProperty("binance.symbols");
-            if (symbolProperties == null || symbolProperties.isEmpty()) return null;
-
             List<Object> result = Lists.newArrayList();
-            List<String> symbols = Lists.newArrayList(symbolProperties.split(";"));
-            symbols.forEach(symbol -> {
+            instrumentRepository.getBinanceSymbols().forEach(symbol -> {
                 String query = "symbol=" + symbol + "&limit=" + limit;
                 result.addAll(restTemplate
                         .exchange(
