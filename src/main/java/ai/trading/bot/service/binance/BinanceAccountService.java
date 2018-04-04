@@ -64,6 +64,8 @@ public class BinanceAccountService implements AccountService {
 
     @Override
     public List<Candle> getCandles(String symbol) {
+        if (!tradeIsAllowed) return Lists.newArrayList();
+
         Candle candle = null;
         try {
             String jsonPrice = restTemplate

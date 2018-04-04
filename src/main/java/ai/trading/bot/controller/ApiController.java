@@ -3,6 +3,7 @@ package ai.trading.bot.controller;
 import ai.trading.bot.domain.Candle;
 import ai.trading.bot.service.AccountService;
 import ai.trading.bot.service.StockMarket;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -28,6 +30,14 @@ public class ApiController {
     @Autowired
     @Qualifier("bitfinexAccountService")
     private AccountService bitfinexAccountService;
+
+    @GetMapping(value = "/markets")
+    public ResponseEntity<List<String>> markets() {
+        return new ResponseEntity<>(Lists.newArrayList(StockMarket.values())
+                .stream()
+                .map(Enum::name)
+                .collect(Collectors.toList()), HttpStatus.OK);
+    }
 
     @GetMapping(value = "/trading", params = {"active"})
     public ResponseEntity<String> trading(Boolean active) {
