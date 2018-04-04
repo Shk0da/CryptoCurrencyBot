@@ -78,8 +78,6 @@
         </filter>
     </appender>
 
-    <logger name="com.github.paolodenti.telegram.logback" level="DEBUG"/>
-
     <root level="INFO">
         <appender-ref ref="ERRORS_FILE"/>
         <appender-ref ref="FILE"/>
@@ -90,6 +88,7 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
+    <logger name="com.github.paolodenti.telegram.logback" level="DEBUG"/>
     <logger name="org.springframework" level="INFO"/>
     <logger name="org.hibernate" level="INFO"/>
     <logger name="io.netty" level="INFO"/>

@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled
  */
 class Strategy implements StrategyService {
 
-    double diff = 1 // in USD
+    double diff = 40 // in USD
     double lot = 0.000001 // in BTC
 
     @Autowired
