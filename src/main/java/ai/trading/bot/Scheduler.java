@@ -39,7 +39,7 @@ public class Scheduler {
     }
 
     @CacheEvict(allEntries = true, cacheNames = {"status", "ordersActive", "ordersHistory"})
-    @Scheduled(fixedDelay = 61000)
+    @Scheduled(fixedDelay = 300_000)
     public void cacheEvict() {
         log.debug("CacheEvict for {\"status\", \"ordersActive\", \"ordersHistory\"}");
     }

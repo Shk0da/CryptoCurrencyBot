@@ -21,8 +21,8 @@ public class Order {
     public JsonObject toJsonObject() {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("symbol", symbol.toLowerCase());
-        jsonObject.addProperty("amount", quantity);
-        jsonObject.addProperty("price", price != null ? price : 0.01);
+        jsonObject.addProperty("amount", String.format("%f", quantity));
+        jsonObject.addProperty("price", String.format("%f", price != null ? price : 0.01));
         jsonObject.addProperty("side", side.name().toLowerCase());
         jsonObject.addProperty("type", type.name().toLowerCase());
 

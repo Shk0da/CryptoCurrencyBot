@@ -1,6 +1,7 @@
 package ai.trading.bot.service.binance;
 
 import ai.trading.bot.domain.Candle;
+import ai.trading.bot.domain.HistoryOrder;
 import ai.trading.bot.domain.Order;
 import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.CandleRepository;
@@ -185,13 +186,22 @@ public class BinanceAccountService implements AccountService {
     @Override
     public List<Object> getActiveOrders(int limit) {
         try {
-            List<Object> result = restTemplate
+            List<Object> response = (List<Object>) restTemplate
                     .exchange(
                             BASE_URL_V3 + "openOrders?" + getSignatureParam(),
                             HttpMethod.GET,
                             new HttpEntity<>(getAuthHeader()),
-                            List.class
+                            Object.class
                     ).getBody();
+
+            JsonArray orders = new GsonBuilder()
+                    .create()
+                    .toJsonTree(response)
+                    .getAsJsonArray();
+
+            List<Object> result = Lists.newArrayList();
+            orders.forEach(jsonElement -> result.add(jsonElement));
+
             return result.subList(0, result.size() > limit ? limit : result.size());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
@@ -203,18 +213,35 @@ public class BinanceAccountService implements AccountService {
     }
 
     @Override
-    public List<Object> getHistoryOrders(int limit) {
+    public List<HistoryOrder> getHistoryOrders(int limit) {
         try {
-            List<Object> result = Lists.newArrayList();
+            List<HistoryOrder> result = Lists.newArrayList();
             instrumentRepository.getBinanceSymbols().forEach(symbol -> {
                 String query = "symbol=" + symbol + "&limit=" + limit + "&";
-                result.addAll(restTemplate
+                List<Object> response = (List<Object>) restTemplate
                         .exchange(
                                 BASE_URL_V3 + "allOrders?" + query + getSignatureParam(query),
                                 HttpMethod.GET,
                                 new HttpEntity<>(getAuthHeader()),
-                                List.class
-                        ).getBody());
+                                Object.class
+                        ).getBody();
+
+                JsonArray orders = new GsonBuilder()
+                        .create()
+                        .toJsonTree(response)
+                        .getAsJsonArray();
+
+                orders.forEach(jsonElement ->
+                        result.add(HistoryOrder.builder()
+                                .id(jsonElement.getAsJsonObject().get("orderId").getAsLong())
+                                .symbol(jsonElement.getAsJsonObject().get("symbol").getAsString())
+                                .side(jsonElement.getAsJsonObject().get("side").getAsString())
+                                .type(jsonElement.getAsJsonObject().get("type").getAsString())
+                                .amount(jsonElement.getAsJsonObject().get("origQty").getAsDouble())
+                                .price(jsonElement.getAsJsonObject().get("price").getAsDouble())
+                                .timestamp(jsonElement.getAsJsonObject().get("time").getAsLong())
+                                .build())
+                );
             });
 
             return result.subList(0, result.size() > limit ? limit : result.size());

@@ -1,6 +1,7 @@
 package ai.trading.bot.service;
 
 import ai.trading.bot.domain.Candle;
+import ai.trading.bot.domain.HistoryOrder;
 import ai.trading.bot.domain.Order;
 import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.CandleRepository;
@@ -27,5 +28,5 @@ public interface AccountService {
 
     List<Object> getActiveOrders(int limit);
 
-    List<Object> getHistoryOrders(int limit);
+    List<HistoryOrder> getHistoryOrders(int limit);
 }

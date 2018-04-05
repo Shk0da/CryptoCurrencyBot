@@ -1,6 +1,7 @@
 package ai.trading.bot.controller;
 
 import ai.trading.bot.domain.Candle;
+import ai.trading.bot.domain.HistoryOrder;
 import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.InstrumentRepository;
 import ai.trading.bot.service.AccountService;
@@ -141,7 +142,7 @@ public class ApiController {
 
     @Cacheable("ordersHistory")
     @GetMapping(value = "/orders/history", params = {"market", "limit"})
-    public ResponseEntity<Object> ordersHistory(StockMarket market, int limit) {
+    public ResponseEntity<List<HistoryOrder>> ordersHistory(StockMarket market, int limit) {
         switch (market) {
             case Binance:
                 return new ResponseEntity<>(binanceAccountService.getHistoryOrders(limit), HttpStatus.OK);

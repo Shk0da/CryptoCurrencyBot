@@ -1,6 +1,7 @@
 package ai.trading.bot.service.bitfinex;
 
 import ai.trading.bot.domain.Candle;
+import ai.trading.bot.domain.HistoryOrder;
 import ai.trading.bot.domain.Order;
 import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.CandleRepository;
@@ -58,7 +59,7 @@ public class BitfinexAccountService implements AccountService {
 
     private final JsonParser jsonParser = new JsonParser();
     private final RestTemplate restTemplate = new RestTemplate();
-    private final AtomicLong nonce = new AtomicLong(DateTime.now().getMillis() * 10000);
+    private final AtomicLong nonce = new AtomicLong((DateTime.now().getMillis() * 10_000) + 10_000_000_000_000_001L);
 
     @Override
     public CandleRepository candleRepository() {
@@ -154,8 +155,15 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public List<Object> getActiveOrders(int limit) {
         try {
-            List<Object> response = ((List<Object>) sendPostRequest("orders").getBody());
-            return response.subList(0, response.size() > limit ? limit : response.size());
+            JsonArray response = new GsonBuilder()
+                    .create()
+                    .toJsonTree(sendPostRequest("orders").getBody())
+                    .getAsJsonArray();
+
+            List<Object> result = Lists.newArrayList();
+            response.forEach(jsonElement -> result.add(jsonElement));
+
+            return result.subList(0, result.size() > limit ? limit : result.size());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         } catch (Exception ex) {
@@ -166,9 +174,25 @@ public class BitfinexAccountService implements AccountService {
     }
 
     @Override
-    public List<Object> getHistoryOrders(int limit) {
+    public List<HistoryOrder> getHistoryOrders(int limit) {
         try {
-            return (List<Object>) sendPostRequest("orders/hist?limit=" + limit).getBody();
+            JsonArray response = new GsonBuilder()
+                    .create()
+                    .toJsonTree(sendPostRequest("orders/hist?limit=" + limit).getBody())
+                    .getAsJsonArray();
+
+            List<HistoryOrder> result = Lists.newArrayList();
+            response.forEach(jsonElement -> result.add(HistoryOrder.builder()
+                    .id(jsonElement.getAsJsonObject().get("id").getAsLong())
+                    .symbol(jsonElement.getAsJsonObject().get("symbol").getAsString())
+                    .side(jsonElement.getAsJsonObject().get("side").getAsString())
+                    .type(jsonElement.getAsJsonObject().get("type").getAsString())
+                    .amount(jsonElement.getAsJsonObject().get("original_amount").getAsDouble())
+                    .price(jsonElement.getAsJsonObject().get("price").getAsDouble())
+                    .timestamp((long) (jsonElement.getAsJsonObject().get("timestamp").getAsDouble() * 1000))
+                    .build()));
+
+            return result.subList(0, result.size() > limit ? limit : result.size());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         } catch (Exception ex) {
@@ -185,7 +209,7 @@ public class BitfinexAccountService implements AccountService {
     private ResponseEntity<Object> sendPostRequest(String uri, JsonObject data) {
         JsonObject body = new JsonObject();
         body.addProperty("request", "/v1/" + uri);
-        body.addProperty("nonce", Long.toString(nonce.incrementAndGet()));
+        body.addProperty("nonce", Long.toString(nonce.addAndGet(100_000L)));
         if (data != null && data.size() > 0) {
             data.keySet().forEach(key -> body.addProperty(key, data.get(key).getAsString()));
         }

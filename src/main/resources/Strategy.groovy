@@ -13,8 +13,8 @@ import org.springframework.scheduling.annotation.Scheduled
  */
 class Strategy implements StrategyService {
 
-    double diff = 40 // in USD
-    double lot = 0.000001 // in BTC
+    double diff = 5 // in USD
+    double lot = 0.002 // in BTC :: BitFinex minimum size for BTC/USD is 0.002
 
     @Autowired
     @Qualifier("binanceAccountService")
@@ -67,12 +67,16 @@ class Strategy implements StrategyService {
                     .build())
 
             log.info "------------- BTCUSDT SELL RESULT ----------------"
+            def sellOrderId = 0
             if (sellResult == null || sellResult.isEmpty()) {
                 log.info "Something wrong! Break..."
                 log.info "--------------------------------------------------"
                 return
             } else {
-                sellResult.each { key, val -> log.info "${key}: ${val}" }
+                sellResult.each { key, val ->
+                    log.info "${key}: ${val}"
+                    if (key == "orderId") sellOrderId = val
+                }
             }
             log.info "--------------------------------------------------"
 
@@ -87,6 +91,10 @@ class Strategy implements StrategyService {
             if (buyResult == null || buyResult.isEmpty()) {
                 log.info "Something wrong! Break..."
                 log.info "--------------------------------------------------"
+                // отменяем предыдущий ордер
+                if (sellOrderId != 0) {
+                    binanceAccountService.cancelOrder("BTCUSDT", sellOrderId)
+                }
                 return
             } else {
                 buyResult.each { key, val -> log.info "${key}: ${val}" }
@@ -110,12 +118,16 @@ class Strategy implements StrategyService {
                     .build())
 
             log.info "-------------- BTCUSD SELL RESULT ----------------"
+            def sellOrderId = 0
             if (sellResult == null || sellResult.isEmpty()) {
                 log.info "Something wrong! Break..."
                 log.info "--------------------------------------------------"
                 return
             } else {
-                sellResult.each { key, val -> log.info "${key}: ${val}" }
+                sellResult.each { key, val ->
+                    log.info "${key}: ${val}"
+                    if (key == "id") sellOrderId = val
+                }
             }
             log.info "--------------------------------------------------"
 
@@ -130,6 +142,10 @@ class Strategy implements StrategyService {
             if (buyResult == null || buyResult.isEmpty()) {
                 log.info "Something wrong! Break..."
                 log.info "--------------------------------------------------"
+                // отменяем предыдущий ордер
+                if (sellOrderId != 0) {
+                    bitfinexAccountService.cancelOrder("BTCUSD", sellOrderId)
+                }
                 return
             } else {
                 buyResult.each { key, val -> log.info "${key}: ${val}" }
