@@ -53,8 +53,10 @@ var app = angular.module("dashboard", [])
             $scope.MarketName = market;
             $scope.AccountInfo = "Loading, wait...";
             $(".chartWrapper").html("");
+            $(".accinf").addClass("d-none");
             $http.get("/api/status?market=" + market).then(function(response) {
-                $scope.AccountInfo = JSON.stringify(response.data, null, 4);
+                $scope.AccountInfo = response.data;
+                $(".accinf").removeClass("d-none");
             });
             $http.get("/api/symbols?market=" + market).then(function(response) {
                 $scope.symbols = response.data;

@@ -56,10 +56,10 @@
         <div id="logArea" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4 d-none"></div>
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4 d-none">
 
-            <div class="jumbotron">
+            <div class="jumbotron accinf">
                 <h3>{{MarketName}} (Symbols: {{symbols}})</h3>
-                <p class="lead">
-                <pre>{{AccountInfo}}</pre>
+                <p class="lead" ng-repeat="inf in AccountInfo track by $index">
+                    {{inf.name}}: locked {{inf.locked}}, free {{inf.free}}
                 </p>
             </div>
 

@@ -2,10 +2,13 @@ package ai.trading.bot.service.binance;
 
 import ai.trading.bot.domain.Candle;
 import ai.trading.bot.domain.Order;
+import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.repository.InstrumentRepository;
 import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
@@ -28,6 +31,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service("binanceAccountService")
@@ -151,11 +155,28 @@ public class BinanceAccountService implements AccountService {
     }
 
     @Override
-    public Object getInfo() {
+    public List<Wallet> getInfo() {
         try {
-            return sendGetRequest("account").getBody();
+            Map<String, Object> accountData = (Map<String, Object>) sendGetRequest("account").getBody();
+            JsonArray balances = new GsonBuilder()
+                    .create()
+                    .toJsonTree(accountData.get("balances"))
+                    .getAsJsonArray();
+
+            List<Wallet> wallets = Lists.newArrayList();
+            balances.forEach(jsonElement ->
+                    wallets.add(Wallet.builder()
+                            .name(jsonElement.getAsJsonObject().get("asset").getAsString())
+                            .free(jsonElement.getAsJsonObject().get("free").getAsDouble())
+                            .locked(jsonElement.getAsJsonObject().get("locked").getAsDouble())
+                            .build())
+            );
+
+            return wallets;
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
         }
 
         return null;
@@ -174,6 +195,8 @@ public class BinanceAccountService implements AccountService {
             return result.subList(0, result.size() > limit ? limit : result.size());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
         }
 
         return null;
@@ -197,6 +220,8 @@ public class BinanceAccountService implements AccountService {
             return result.subList(0, result.size() > limit ? limit : result.size());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
         }
 
         return null;

@@ -1,6 +1,7 @@
 package ai.trading.bot.controller;
 
 import ai.trading.bot.domain.Candle;
+import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.InstrumentRepository;
 import ai.trading.bot.service.AccountService;
 import ai.trading.bot.service.StockMarket;
@@ -85,7 +86,7 @@ public class ApiController {
 
     @Cacheable("status")
     @GetMapping(value = "/status", params = {"market"})
-    public ResponseEntity<Object> status(String market) {
+    public ResponseEntity<List<Wallet>> status(String market) {
         switch (StockMarket.valueOf(market)) {
             case BitFinex:
                 return new ResponseEntity<>(bitfinexAccountService.getInfo(), HttpStatus.OK);

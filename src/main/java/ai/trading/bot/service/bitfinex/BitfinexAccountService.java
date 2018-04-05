@@ -2,9 +2,12 @@ package ai.trading.bot.service.bitfinex;
 
 import ai.trading.bot.domain.Candle;
 import ai.trading.bot.domain.Order;
+import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
@@ -119,11 +122,30 @@ public class BitfinexAccountService implements AccountService {
     }
 
     @Override
-    public Object getInfo() {
+    public List<Wallet> getInfo() {
         try {
-            return sendPostRequest("account_infos").getBody();
+            JsonArray balances = new GsonBuilder()
+                    .create()
+                    .toJsonTree(sendPostRequest("balances").getBody())
+                    .getAsJsonArray();
+
+            List<Wallet> wallets = Lists.newArrayList();
+            balances.forEach(jsonElement -> {
+                        Double amount = jsonElement.getAsJsonObject().get("amount").getAsDouble();
+                        Double available = jsonElement.getAsJsonObject().get("available").getAsDouble();
+                        wallets.add(Wallet.builder()
+                                .name(jsonElement.getAsJsonObject().get("currency").getAsString())
+                                .free(available)
+                                .locked(amount - available)
+                                .build());
+                    }
+            );
+
+            return wallets;
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
         }
 
         return null;
@@ -132,9 +154,12 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public List<Object> getActiveOrders(int limit) {
         try {
-            return ((List<Object>) sendPostRequest("orders").getBody()).subList(0, limit);
+            List<Object> response = ((List<Object>) sendPostRequest("orders").getBody());
+            return response.subList(0, response.size() > limit ? limit : response.size());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
         }
 
         return null;
@@ -146,6 +171,8 @@ public class BitfinexAccountService implements AccountService {
             return (List<Object>) sendPostRequest("orders/hist?limit=" + limit).getBody();
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
         }
 
         return null;

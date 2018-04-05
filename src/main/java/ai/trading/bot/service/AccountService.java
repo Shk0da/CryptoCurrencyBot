@@ -2,6 +2,7 @@ package ai.trading.bot.service;
 
 import ai.trading.bot.domain.Candle;
 import ai.trading.bot.domain.Order;
+import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.CandleRepository;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,7 @@ public interface AccountService {
 
     Object cancelOrder(String symbol, Long orderId);
 
-    Object getInfo();
+    List<Wallet> getInfo();
 
     List<Object> getActiveOrders(int limit);
 
