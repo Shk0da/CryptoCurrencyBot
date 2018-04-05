@@ -30,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service("bitfinexAccountService")
@@ -54,6 +55,7 @@ public class BitfinexAccountService implements AccountService {
 
     private final JsonParser jsonParser = new JsonParser();
     private final RestTemplate restTemplate = new RestTemplate();
+    private final AtomicLong nonce = new AtomicLong(0);
 
     @Override
     public CandleRepository candleRepository() {
@@ -156,7 +158,7 @@ public class BitfinexAccountService implements AccountService {
     private ResponseEntity<Object> sendPostRequest(String uri, JsonObject data) {
         JsonObject body = new JsonObject();
         body.addProperty("request", "/v1/" + uri);
-        body.addProperty("nonce", Long.toString(DateTime.now().getMillis()));
+        body.addProperty("nonce", Long.toString((DateTime.now().getMillis() * 1000)) + nonce.incrementAndGet());
         if (data != null && data.size() > 0) {
             data.keySet().forEach(key -> body.addProperty(key, data.get(key).getAsString()));
         }

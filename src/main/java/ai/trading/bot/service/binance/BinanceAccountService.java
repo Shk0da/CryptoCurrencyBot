@@ -164,19 +164,14 @@ public class BinanceAccountService implements AccountService {
     @Override
     public List<Object> getActiveOrders(int limit) {
         try {
-            List<Object> result = Lists.newArrayList();
-            instrumentRepository.getBinanceSymbols().forEach(symbol -> {
-                String query = "symbol=" + symbol + "&limit=" + limit;
-                result.addAll(restTemplate
-                        .exchange(
-                                BASE_URL_V1 + "trades?" + query + getSignatureParam(query),
-                                HttpMethod.GET,
-                                new HttpEntity<>(getAuthHeader()),
-                                List.class
-                        ).getBody());
-            });
-
-            return result;
+            List<Object> result = restTemplate
+                    .exchange(
+                            BASE_URL_V3 + "openOrders?" + getSignatureParam(),
+                            HttpMethod.GET,
+                            new HttpEntity<>(getAuthHeader()),
+                            List.class
+                    ).getBody();
+            return result.subList(0, result.size() > limit ? limit : result.size());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         }
@@ -189,17 +184,17 @@ public class BinanceAccountService implements AccountService {
         try {
             List<Object> result = Lists.newArrayList();
             instrumentRepository.getBinanceSymbols().forEach(symbol -> {
-                String query = "symbol=" + symbol + "&limit=" + limit;
+                String query = "symbol=" + symbol + "&limit=" + limit + "&";
                 result.addAll(restTemplate
                         .exchange(
-                                BASE_URL_V1 + "historicalTrades?" + query + getSignatureParam(query),
+                                BASE_URL_V3 + "allOrders?" + query + getSignatureParam(query),
                                 HttpMethod.GET,
                                 new HttpEntity<>(getAuthHeader()),
                                 List.class
                         ).getBody());
             });
 
-            return result;
+            return result.subList(0, result.size() > limit ? limit : result.size());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         }

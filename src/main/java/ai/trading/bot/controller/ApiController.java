@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,15 +64,26 @@ public class ApiController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @GetMapping(value = "/trading/status", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> tradingStatus() {
+        String result = (binanceAccountService.getTradeIsAllowed() && bitfinexAccountService.getTradeIsAllowed())
+                ? "on"
+                : "off";
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
     @GetMapping(path = "/logging", produces = MediaType.TEXT_PLAIN_VALUE)
     public String logging() {
         try {
-            return FileUtils.readFileToString(new File("./logs/bot.log"));
+            List<String> logs = FileUtils.readLines(new File("./logs/bot.log"));
+            Collections.reverse(logs);
+            return String.join("\n", logs.subList(0, logs.size() < 100 ? logs.size() : 100));
         } catch (IOException ex) {
             return "Failed open log file.";
         }
     }
 
+    @Cacheable("status")
     @GetMapping(value = "/status", params = {"market"})
     public ResponseEntity<Object> status(String market) {
         switch (StockMarket.valueOf(market)) {
@@ -112,6 +125,7 @@ public class ApiController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @Cacheable("ordersActive")
     @GetMapping(value = "/orders/active", params = {"market", "limit"})
     public ResponseEntity<List<Object>> ordersActive(StockMarket market, int limit) {
         switch (market) {
@@ -124,6 +138,7 @@ public class ApiController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+    @Cacheable("ordersHistory")
     @GetMapping(value = "/orders/history", params = {"market", "limit"})
     public ResponseEntity<Object> ordersHistory(StockMarket market, int limit) {
         switch (market) {

@@ -18,7 +18,7 @@
             <pattern>%date{yyyy.MM.dd HH:mm:ss.SSS} %-5level [%thread] %logger{40} - %msg%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
+            <level>ERROR</level>
         </filter>
     </appender>
 
@@ -34,10 +34,8 @@
         <encoder>
             <pattern>%date{yyyy.MM.dd HH:mm:ss.SSS} %-5level [%thread] %logger{40} - %msg%n</pattern>
         </encoder>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
         </filter>
     </appender>
 

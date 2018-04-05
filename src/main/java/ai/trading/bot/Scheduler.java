@@ -7,6 +7,7 @@ import ai.trading.bot.service.StockMarket;
 import akka.actor.ActorSystem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -35,5 +36,11 @@ public class Scheduler {
                 .actorSelection(ActorConfig.ACTOR_PATH_HEAD + "CollectorActor_" + StockMarket.BitFinex + "_" + symbol)
                 .tell(Messages.Collect, actorSystem.guardian())
         );
+    }
+
+    @CacheEvict(allEntries = true, cacheNames = {"status", "ordersActive", "ordersHistory"})
+    @Scheduled(fixedDelay = 61000)
+    public void cacheEvict() {
+        log.debug("CacheEvict for {\"status\", \"ordersActive\", \"ordersHistory\"}");
     }
 }
