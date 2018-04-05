@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled
  */
 class Strategy implements StrategyService {
 
-    double diff = 5 // in USD
+    double diff = 40 // in USD
     double lot = 0.002 // in BTC :: BitFinex minimum size for BTC/USD is 0.002
 
     @Autowired
