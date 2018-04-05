@@ -1,5 +1,6 @@
 package ai.trading.bot.controller;
 
+import ai.trading.bot.domain.ActiveOrder;
 import ai.trading.bot.domain.Candle;
 import ai.trading.bot.domain.HistoryOrder;
 import ai.trading.bot.domain.Wallet;
@@ -129,7 +130,7 @@ public class ApiController {
 
     @Cacheable("ordersActive")
     @GetMapping(value = "/orders/active", params = {"market", "limit"})
-    public ResponseEntity<List<Object>> ordersActive(StockMarket market, int limit) {
+    public ResponseEntity<List<ActiveOrder>> ordersActive(StockMarket market, int limit) {
         switch (market) {
             case Binance:
                 return new ResponseEntity<>(binanceAccountService.getActiveOrders(limit), HttpStatus.OK);

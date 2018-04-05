@@ -1,9 +1,6 @@
 package ai.trading.bot.service.bitfinex;
 
-import ai.trading.bot.domain.Candle;
-import ai.trading.bot.domain.HistoryOrder;
-import ai.trading.bot.domain.Order;
-import ai.trading.bot.domain.Wallet;
+import ai.trading.bot.domain.*;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
@@ -153,15 +150,31 @@ public class BitfinexAccountService implements AccountService {
     }
 
     @Override
-    public List<Object> getActiveOrders(int limit) {
+    public List<ActiveOrder> getActiveOrders(int limit) {
         try {
             JsonArray response = new GsonBuilder()
                     .create()
                     .toJsonTree(sendPostRequest("orders").getBody())
                     .getAsJsonArray();
 
-            List<Object> result = Lists.newArrayList();
-            response.forEach(jsonElement -> result.add(jsonElement));
+            List<ActiveOrder> result = Lists.newArrayList();
+            response.forEach(jsonElement -> {
+                String status = "";
+                if (jsonElement.getAsJsonObject().get("is_cancelled").getAsBoolean()) status = "canceled";
+                if (jsonElement.getAsJsonObject().get("is_hidden").getAsBoolean()) status = "hidden";
+                if (jsonElement.getAsJsonObject().get("was_forced").getAsBoolean()) status = "forced";
+
+                result.add(ActiveOrder.builder()
+                        .id(jsonElement.getAsJsonObject().get("id").getAsLong())
+                        .symbol(jsonElement.getAsJsonObject().get("symbol").getAsString())
+                        .side(jsonElement.getAsJsonObject().get("side").getAsString())
+                        .type(jsonElement.getAsJsonObject().get("type").getAsString())
+                        .amount(jsonElement.getAsJsonObject().get("original_amount").getAsDouble())
+                        .price(jsonElement.getAsJsonObject().get("price").getAsDouble())
+                        .timestamp((long) (jsonElement.getAsJsonObject().get("timestamp").getAsDouble() * 1000))
+                        .status(status)
+                        .build());
+            });
 
             return result.subList(0, result.size() > limit ? limit : result.size());
         } catch (HttpClientErrorException ex) {

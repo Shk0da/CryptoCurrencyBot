@@ -1,9 +1,6 @@
 package ai.trading.bot.service.binance;
 
-import ai.trading.bot.domain.Candle;
-import ai.trading.bot.domain.HistoryOrder;
-import ai.trading.bot.domain.Order;
-import ai.trading.bot.domain.Wallet;
+import ai.trading.bot.domain.*;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.repository.InstrumentRepository;
 import ai.trading.bot.service.AccountService;
@@ -184,7 +181,7 @@ public class BinanceAccountService implements AccountService {
     }
 
     @Override
-    public List<Object> getActiveOrders(int limit) {
+    public List<ActiveOrder> getActiveOrders(int limit) {
         try {
             List<Object> response = (List<Object>) restTemplate
                     .exchange(
@@ -199,8 +196,17 @@ public class BinanceAccountService implements AccountService {
                     .toJsonTree(response)
                     .getAsJsonArray();
 
-            List<Object> result = Lists.newArrayList();
-            orders.forEach(jsonElement -> result.add(jsonElement));
+            List<ActiveOrder> result = Lists.newArrayList();
+            orders.forEach(jsonElement -> result.add(ActiveOrder.builder()
+                    .id(jsonElement.getAsJsonObject().get("orderId").getAsLong())
+                    .symbol(jsonElement.getAsJsonObject().get("symbol").getAsString())
+                    .side(jsonElement.getAsJsonObject().get("side").getAsString())
+                    .type(jsonElement.getAsJsonObject().get("type").getAsString())
+                    .amount(jsonElement.getAsJsonObject().get("origQty").getAsDouble())
+                    .price(jsonElement.getAsJsonObject().get("price").getAsDouble())
+                    .timestamp(jsonElement.getAsJsonObject().get("time").getAsLong())
+                    .status(jsonElement.getAsJsonObject().get("status").getAsString())
+                    .build()));
 
             return result.subList(0, result.size() > limit ? limit : result.size());
         } catch (HttpClientErrorException ex) {
