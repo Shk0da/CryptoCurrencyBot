@@ -190,6 +190,9 @@ public class BitfinexAccountService implements AccountService {
             data.keySet().forEach(key -> body.addProperty(key, data.get(key).getAsString()));
         }
 
+        log.debug("nonce: {}", body.get("nonce").getAsString());
+        log.debug("body: {}", body.toString());
+
         return restTemplate
                 .exchange(
                         BASE_URL + "/v1/" + uri,
