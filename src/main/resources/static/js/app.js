@@ -48,8 +48,9 @@ var app = angular.module("dashboard", [])
                 logRefresh = undefined;
             }
             var market = event.target.hash.replace("#", "");
-            $("#logArea").addClass("d-none");
-            $("main").removeClass("d-none");
+            $("main").addClass("d-none");
+            $("#logArea").html("Loading, wait...");
+            $("#logArea").removeClass("d-none");
             $scope.MarketName = market;
             $scope.AccountInfo = "Loading, wait...";
             $(".chartWrapper").html("");
@@ -66,6 +67,8 @@ var app = angular.module("dashboard", [])
             });
             $http.get("/api/orders/history?limit=20&market=" + market).then(function(response) {
                 $scope.historyOrders = response.data;
+                $("#logArea").addClass("d-none");
+                $("main").removeClass("d-none");
             });
         }
     });
