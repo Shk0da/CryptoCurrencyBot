@@ -32,7 +32,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -58,7 +57,6 @@ public class BitfinexAccountService implements AccountService {
 
     private final JsonParser jsonParser = new JsonParser();
     private final RestTemplate restTemplate = new RestTemplate();
-    private final AtomicLong nonce = new AtomicLong((DateTime.now().getMillis() * 20000));
 
     @Override
     public CandleRepository candleRepository() {
@@ -124,7 +122,6 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public List<Wallet> getInfo() {
         try {
-            TimeUnit.SECONDS.sleep(1); // fcking bitfinex frod
             JsonArray balances = new GsonBuilder()
                     .create()
                     .toJsonTree(sendPostRequest("balances").getBody())
@@ -157,7 +154,6 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public List<ActiveOrder> getActiveOrders(int limit) {
         try {
-            TimeUnit.SECONDS.sleep(1); // fcking bitfinex frod
             JsonArray response = new GsonBuilder()
                     .create()
                     .toJsonTree(sendPostRequest("orders").getBody())
@@ -198,7 +194,6 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public List<HistoryOrder> getHistoryOrders(int limit) {
         try {
-            TimeUnit.SECONDS.sleep(1); // fcking bitfinex frod
             JsonArray response = new GsonBuilder()
                     .create()
                     .toJsonTree(sendPostRequest("orders/hist?limit=" + limit).getBody())
@@ -229,13 +224,16 @@ public class BitfinexAccountService implements AccountService {
     }
 
     private ResponseEntity<Object> sendPostRequest(String uri) {
+        try {
+            TimeUnit.SECONDS.sleep(1); // fcking bitfinex frod
+        } catch (InterruptedException nothing) {}
         return sendPostRequest(uri, null);
     }
 
     private ResponseEntity<Object> sendPostRequest(String uri, JsonObject data) {
         JsonObject body = new JsonObject();
         body.addProperty("request", "/v1/" + uri);
-        body.addProperty("nonce", Long.toString(nonce.addAndGet(System.currentTimeMillis())));
+        body.addProperty("nonce", Long.toString(DateTime.now().getMillis() * 1000));
         if (data != null && data.size() > 0) {
             data.keySet().forEach(key -> {
                 if ("order_id".equals(key)) {
