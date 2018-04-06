@@ -34,7 +34,7 @@ class Strategy implements StrategyService {
     /**
      * Этот метод выполняется раз в fixedDelay милисекунд.
      */
-    @Scheduled(fixedDelay = 1000L)
+    @Scheduled(fixedDelay = 10000L)
     void run() {
         BTCUSDandBTCUSDT()
         LTCUSDandLTCUSDT()
@@ -91,7 +91,7 @@ class Strategy implements StrategyService {
             if (buyResult == null || buyResult.isEmpty()) {
                 log.info "Something wrong! Break..."
                 log.info "--------------------------------------------------"
-                // отменяем предыдущий ордер
+                // пробуем отменить предыдущий ордер, если он еще не реализован
                 if (sellOrderId != 0) {
                     binanceAccountService.cancelOrder("BTCUSDT", sellOrderId)
                 }
@@ -142,7 +142,7 @@ class Strategy implements StrategyService {
             if (buyResult == null || buyResult.isEmpty()) {
                 log.info "Something wrong! Break..."
                 log.info "--------------------------------------------------"
-                // отменяем предыдущий ордер
+                // пробуем отменить предыдущий ордер, если он еще не реализован
                 if (sellOrderId != 0) {
                     bitfinexAccountService.cancelOrder("BTCUSD", sellOrderId)
                 }

@@ -31,7 +31,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service("bitfinexAccountService")
@@ -110,7 +112,7 @@ public class BitfinexAccountService implements AccountService {
     public Object cancelOrder(String symbol, Long orderId) {
         try {
             JsonObject json = new JsonObject();
-            json.addProperty("id", orderId);
+            json.addProperty("order_id", orderId.intValue());
             return sendPostRequest("order/cancel", json).getBody();
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
@@ -122,6 +124,7 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public List<Wallet> getInfo() {
         try {
+            TimeUnit.SECONDS.sleep(1); // fcking bitfinex frod
             JsonArray balances = new GsonBuilder()
                     .create()
                     .toJsonTree(sendPostRequest("balances").getBody())
@@ -139,7 +142,9 @@ public class BitfinexAccountService implements AccountService {
                     }
             );
 
-            return wallets;
+            return wallets.stream()
+                    .filter(wallet -> wallet.getFree() > 0 || wallet.getLocked() > 0)
+                    .collect(Collectors.toList());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         } catch (Exception ex) {
@@ -152,6 +157,7 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public List<ActiveOrder> getActiveOrders(int limit) {
         try {
+            TimeUnit.SECONDS.sleep(1); // fcking bitfinex frod
             JsonArray response = new GsonBuilder()
                     .create()
                     .toJsonTree(sendPostRequest("orders").getBody())
@@ -189,6 +195,7 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public List<HistoryOrder> getHistoryOrders(int limit) {
         try {
+            TimeUnit.SECONDS.sleep(1); // fcking bitfinex frod
             JsonArray response = new GsonBuilder()
                     .create()
                     .toJsonTree(sendPostRequest("orders/hist?limit=" + limit).getBody())
@@ -224,7 +231,13 @@ public class BitfinexAccountService implements AccountService {
         body.addProperty("request", "/v1/" + uri);
         body.addProperty("nonce", Long.toString(nonce.addAndGet(100_000L)));
         if (data != null && data.size() > 0) {
-            data.keySet().forEach(key -> body.addProperty(key, data.get(key).getAsString()));
+            data.keySet().forEach(key -> {
+                if ("order_id".equals(key)) {
+                    body.addProperty(key, data.get(key).getAsInt());
+                } else {
+                    body.addProperty(key, data.get(key).getAsString());
+                }
+            });
         }
 
         log.debug("nonce: {}", body.get("nonce").getAsString());

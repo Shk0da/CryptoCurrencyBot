@@ -30,6 +30,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service("binanceAccountService")
@@ -114,9 +115,9 @@ public class BinanceAccountService implements AccountService {
     @Override
     public Object cancelOrder(String symbol, Long orderId) {
         try {
-            String query = "symbol=" + symbol;
+            String query = "symbol=" + symbol + "&";
             if (orderId != null && orderId > 0) {
-                query += "&orderId=" + orderId;
+                query += "orderId=" + orderId + "&";
             }
             return restTemplate
                     .exchange(
@@ -170,7 +171,9 @@ public class BinanceAccountService implements AccountService {
                             .build())
             );
 
-            return wallets;
+            return wallets.stream()
+                    .filter(wallet -> wallet.getFree() > 0 || wallet.getLocked() > 0)
+                    .collect(Collectors.toList());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         } catch (Exception ex) {
