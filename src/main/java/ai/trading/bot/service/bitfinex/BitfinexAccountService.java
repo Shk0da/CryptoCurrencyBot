@@ -58,7 +58,7 @@ public class BitfinexAccountService implements AccountService {
 
     private final JsonParser jsonParser = new JsonParser();
     private final RestTemplate restTemplate = new RestTemplate();
-    private final AtomicLong nonce = new AtomicLong((DateTime.now().getMillis() * 10_000) + 10_000_000_000_000_001L);
+    private final AtomicLong nonce = new AtomicLong((DateTime.now().getMillis() * 20000));
 
     @Override
     public CandleRepository candleRepository() {
@@ -229,7 +229,7 @@ public class BitfinexAccountService implements AccountService {
     private ResponseEntity<Object> sendPostRequest(String uri, JsonObject data) {
         JsonObject body = new JsonObject();
         body.addProperty("request", "/v1/" + uri);
-        body.addProperty("nonce", Long.toString(nonce.addAndGet(100_000L)));
+        body.addProperty("nonce", Long.toString(nonce.addAndGet(System.currentTimeMillis())));
         if (data != null && data.size() > 0) {
             data.keySet().forEach(key -> {
                 if ("order_id".equals(key)) {
