@@ -211,7 +211,10 @@ public class BinanceAccountService implements AccountService {
                     .status(jsonElement.getAsJsonObject().get("status").getAsString())
                     .build()));
 
-            return result.subList(0, result.size() > limit ? limit : result.size());
+            return result.subList(0, result.size() > limit ? limit : result.size())
+                    .stream()
+                    .sorted((f1, f2) -> Long.compare(f2.getTimestamp(), f1.getTimestamp()))
+                    .collect(Collectors.toList());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         } catch (Exception ex) {
@@ -253,7 +256,10 @@ public class BinanceAccountService implements AccountService {
                 );
             });
 
-            return result.subList(0, result.size() > limit ? limit : result.size());
+            return result.subList(0, result.size() > limit ? limit : result.size())
+                    .stream()
+                    .sorted((f1, f2) -> Long.compare(f2.getTimestamp(), f1.getTimestamp()))
+                    .collect(Collectors.toList());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         } catch (Exception ex) {

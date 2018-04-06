@@ -182,7 +182,10 @@ public class BitfinexAccountService implements AccountService {
                         .build());
             });
 
-            return result.subList(0, result.size() > limit ? limit : result.size());
+            return result.subList(0, result.size() > limit ? limit : result.size())
+                    .stream()
+                    .sorted((f1, f2) -> Long.compare(f2.getTimestamp(), f1.getTimestamp()))
+                    .collect(Collectors.toList());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         } catch (Exception ex) {
@@ -212,7 +215,10 @@ public class BitfinexAccountService implements AccountService {
                     .timestamp((long) (jsonElement.getAsJsonObject().get("timestamp").getAsDouble() * 1000))
                     .build()));
 
-            return result.subList(0, result.size() > limit ? limit : result.size());
+            return result.subList(0, result.size() > limit ? limit : result.size())
+                    .stream()
+                    .sorted((f1, f2) -> Long.compare(f2.getTimestamp(), f1.getTimestamp()))
+                    .collect(Collectors.toList());
         } catch (HttpClientErrorException ex) {
             log.error(ex.getResponseBodyAsString());
         } catch (Exception ex) {
