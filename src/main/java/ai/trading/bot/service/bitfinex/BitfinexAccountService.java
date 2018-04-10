@@ -1,6 +1,7 @@
 package ai.trading.bot.service.bitfinex;
 
 import ai.trading.bot.domain.*;
+import ai.trading.bot.repository.BalanceRepository;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.service.AccountService;
 import com.google.common.collect.Lists;
@@ -50,6 +51,10 @@ public class BitfinexAccountService implements AccountService {
     @Qualifier("bitfinexCandleRepository")
     private CandleRepository bitfinexCandleRepository;
 
+    @Autowired
+    @Qualifier("bitfinexBalanceRepository")
+    private BalanceRepository balanceRepository;
+
     @Setter
     @Getter
     @Value("${bitfinex.trade.allowed:true}")
@@ -61,6 +66,11 @@ public class BitfinexAccountService implements AccountService {
     @Override
     public CandleRepository candleRepository() {
         return bitfinexCandleRepository;
+    }
+
+    @Override
+    public BalanceRepository balanceRepository() {
+        return balanceRepository;
     }
 
     @Override
@@ -148,7 +158,7 @@ public class BitfinexAccountService implements AccountService {
             log.error(ex.getMessage());
         }
 
-        return null;
+        return Lists.newArrayList();
     }
 
     @Override

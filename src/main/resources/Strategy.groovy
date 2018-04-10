@@ -53,6 +53,24 @@ class Strategy implements StrategyService {
 
         // Если {цена продажи} BTCUSDT больше {цена покупки} BTCUSD чем {diff}
         if (BTCUSDT.bid - BTCUSD.ask >= diff) {
+
+            // проверка покупательной способности wallet
+            def binanceBTCBalance = binanceAccountService.balanceRepository().getBalance("BTC")
+            def binanceBTCLimit = binanceAccountService.balanceRepository().getLimit("BTC")
+
+            if (binanceBTCBalance <= binanceBTCLimit) {
+                log.warn "Binance BTC balance: " + binanceBTCBalance
+                return
+            }
+
+            def bitfinexUSDBalance = bitfinexAccountService.balanceRepository().getBalance("USD")
+            def bitfinexUSDLimit = bitfinexAccountService.balanceRepository().getLimit("USD")
+
+            if (bitfinexUSDBalance <= bitfinexUSDLimit) {
+                log.warn "Bitfinex USD balance: " + bitfinexUSDBalance
+                return
+            }
+
             log.info "--------------------------------------------------"
             log.info "We have new DIFF: " + String.format("%.2f", BTCUSDT.bid - BTCUSD.ask) + "USD"
             log.info "BTCUSDT:" + BTCUSDT.bid + "; BTCUSD:" + BTCUSD.ask
@@ -104,6 +122,24 @@ class Strategy implements StrategyService {
 
         // Если {цена продажи} BTCUSD больше {цена покупки} BTCUSDT чем {diff}
         if (BTCUSD.bid - BTCUSDT.ask >= diff) {
+
+            // проверка покупательной способности wallet
+            def bitfinexBTCBalance = bitfinexAccountService.balanceRepository().getBalance("BTC")
+            def bitfinexBTCLimit = bitfinexAccountService.balanceRepository().getLimit("BTC")
+
+            if (bitfinexBTCBalance <= bitfinexBTCLimit) {
+                log.warn "Bitfinex BTC balance: " + bitfinexBTCBalance
+                return
+            }
+
+            def binanceUSDTBalance = binanceAccountService.balanceRepository().getBalance("USDT")
+            def binanceUSDTLimit = binanceAccountService.balanceRepository().getLimit("USDT")
+
+            if (binanceUSDTBalance <= binanceUSDTLimit) {
+                log.warn "Binance USDT balance: " + binanceUSDTBalance
+                return
+            }
+
             log.info "--------------------------------------------------"
             log.info "We have new DIFF: " + String.format("%.2f", BTCUSD.bid - BTCUSDT.ask) + "USD"
             log.info "BTCUSD:" + BTCUSD.bid + "; BTCUSDT:" + BTCUSDT.ask

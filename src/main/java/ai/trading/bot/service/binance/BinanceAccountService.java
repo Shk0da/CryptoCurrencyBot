@@ -1,6 +1,7 @@
 package ai.trading.bot.service.binance;
 
 import ai.trading.bot.domain.*;
+import ai.trading.bot.repository.BalanceRepository;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.repository.InstrumentRepository;
 import ai.trading.bot.service.AccountService;
@@ -50,6 +51,10 @@ public class BinanceAccountService implements AccountService {
     private CandleRepository binanceCandleRepository;
 
     @Autowired
+    @Qualifier("binanceBalanceRepository")
+    private BalanceRepository balanceRepository;
+
+    @Autowired
     private InstrumentRepository instrumentRepository;
 
     @Setter
@@ -63,6 +68,11 @@ public class BinanceAccountService implements AccountService {
     @Override
     public CandleRepository candleRepository() {
         return binanceCandleRepository;
+    }
+
+    @Override
+    public BalanceRepository balanceRepository() {
+        return balanceRepository;
     }
 
     @Override
@@ -180,7 +190,7 @@ public class BinanceAccountService implements AccountService {
             log.error(ex.getMessage());
         }
 
-        return null;
+        return Lists.newArrayList();
     }
 
     @Override

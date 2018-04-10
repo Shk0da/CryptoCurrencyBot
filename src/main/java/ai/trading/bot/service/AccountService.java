@@ -1,6 +1,7 @@
 package ai.trading.bot.service;
 
 import ai.trading.bot.domain.*;
+import ai.trading.bot.repository.BalanceRepository;
 import ai.trading.bot.repository.CandleRepository;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,8 @@ public interface AccountService {
     void setTradeIsAllowed(Boolean val);
 
     CandleRepository candleRepository();
+
+    BalanceRepository balanceRepository();
 
     List<Candle> getCandles(String symbol);
 
