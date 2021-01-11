@@ -86,6 +86,8 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
+    <logger name="ROOT" level="INFO"/>
+    <logger name="ai.trading.bot" level="DEBUG"/>
     <logger name="com.github.paolodenti.telegram.logback" level="DEBUG"/>
     <logger name="org.springframework" level="INFO"/>
     <logger name="org.springframework.scheduling.concurrent" level="WARN"/>
