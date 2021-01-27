@@ -13,8 +13,11 @@ import org.springframework.scheduling.annotation.Scheduled
  */
 class TestStrategy implements StrategyService {
 
-    double diff = 70 // in USD
-    double lot = 0.0002 // in BTC :: BitFinex minimum size for BTC/USD is 0.0002
+    double diffBtc = 150 // in USD
+    double lotBtc = 0.0002 // in BTC :: BitFinex minimum size for BTC/USD is 0.0002
+
+    double diffEth = 50 // in USD
+    double lotEth = 0.006 // in ETH :: BitFinex minimum size for ETH/USD is 0.006
 
     @Autowired
     @Qualifier("binanceAccountService")
@@ -25,16 +28,21 @@ class TestStrategy implements StrategyService {
     AccountService bitfinexAccountService
 
     def lastUpdateBtcUsd
+    def lastUpdateEthUsd
     def log = LoggerFactory.getLogger(Strategy.class)
 
-    def balanceBinanceUSD = 850
-    def balanceBinanceBTC = 0.025
+    def balanceBinanceUSD = 362.34
+    def balanceBinanceBTC = 0.043
+    def balanceBinanceETH = 0.5
 
-    def balanceBitfinexUSD = 850
-    def balanceBitfinexBTC = 0.025
+    def balanceBitfinexUSD = 1659
+    def balanceBitfinexBTC = 0.007
+    def balanceBitfinexETH = 0.5
 
     TestStrategy() {
-        log.info String.format("Strategy loaded successful! With param: diff = %.2fUSD, lot = %fBTC", diff, lot)
+        log.info "Strategy loaded successful!"
+        log.info String.format("With param: diffBtc = %.2fUSD, lotBtc = %fBTC", diffBtc, lotBtc)
+        log.info String.format("With param: diffEth = %.2fUSD, lotEth = %fBTC", diffEth, lotEth)
     }
 
     /**
@@ -43,7 +51,7 @@ class TestStrategy implements StrategyService {
     @Scheduled(fixedDelay = 10000L)
     void run() {
         BTCUSDandBTCUSDT()
-        LTCUSDandLTCUSDT()
+        ETHUSDandETHUSDT()
         // ... and other pairs
     }
 
@@ -58,11 +66,15 @@ class TestStrategy implements StrategyService {
         if (candleDateTime == lastUpdateBtcUsd) return else lastUpdateBtcUsd = candleDateTime
 
         // Если {цена продажи} BTCUSDT больше {цена покупки} BTCUSD чем {diff}
-        if (BTCUSDT.bid - BTCUSD.ask >= diff) {
+        if (BTCUSDT.bid - BTCUSD.ask >= diffBtc) {
+
+            log.info "--------------------------------------------------"
+            log.info "We have new DIFF: " + String.format("%.2f", BTCUSDT.bid - BTCUSD.ask) + "USD"
+            log.info "--------------------------------------------------"
 
             // проверка покупательной способности wallet
             def binanceBTCBalance = balanceBinanceBTC
-            def binanceBTCLimit = binanceAccountService.balanceRepository().getLimit("BTC")
+            def binanceBTCLimit = lotBtc * 2
 
             if (binanceBTCBalance <= binanceBTCLimit) {
                 log.warn "Binance BTC balance: " + binanceBTCBalance
@@ -70,7 +82,7 @@ class TestStrategy implements StrategyService {
             }
 
             def bitfinexUSDBalance = balanceBitfinexUSD
-            def bitfinexUSDLimit = bitfinexAccountService.balanceRepository().getLimit("USD")
+            def bitfinexUSDLimit = diffBtc
 
             if (bitfinexUSDBalance <= bitfinexUSDLimit) {
                 log.warn "Bitfinex USD balance: " + bitfinexUSDBalance
@@ -78,21 +90,20 @@ class TestStrategy implements StrategyService {
             }
 
             log.info "--------------------------------------------------"
-            log.info "Do arbitrage: " + String.format("%f", lot) + "BTC"
+            log.info "Do arbitrage: " + String.format("%f", lotBtc) + "BTC"
             log.info "BTCUSDT:" + BTCUSDT.bid + "; BTCUSD:" + BTCUSD.ask
-            log.info "We have new DIFF: " + String.format("%.2f", BTCUSDT.bid - BTCUSD.ask) + "USD"
             log.info "--------------------------------------------------"
 
-            balanceBinanceBTC = balanceBinanceBTC - lot
-            balanceBinanceUSD = balanceBinanceUSD + (lot * BTCUSDT.bid)
+            balanceBinanceBTC = balanceBinanceBTC - lotBtc
+            balanceBinanceUSD = balanceBinanceUSD + (lotBtc * BTCUSDT.bid)
 
             log.info "--------------------------------------------------"
             log.info "Binance BTC: " + balanceBinanceBTC
             log.info "Binance USD: " + balanceBinanceUSD
             log.info "------------- BTCUSDT SELL RESULT ----------------"
 
-            balanceBitfinexUSD = balanceBitfinexUSD - (lot * BTCUSD.ask)
-            balanceBitfinexBTC = balanceBitfinexBTC + lot
+            balanceBitfinexUSD = balanceBitfinexUSD - (lotBtc * BTCUSD.ask)
+            balanceBitfinexBTC = balanceBitfinexBTC + lotBtc
 
             log.info "--------------------------------------------------"
             log.info "Bitfinex BTC: " + balanceBitfinexBTC
@@ -101,11 +112,15 @@ class TestStrategy implements StrategyService {
         }
 
         // Если {цена продажи} BTCUSD больше {цена покупки} BTCUSDT чем {diff}
-        if (BTCUSD.bid - BTCUSDT.ask >= diff) {
+        if (BTCUSD.bid - BTCUSDT.ask >= diffBtc) {
+
+            log.info "--------------------------------------------------"
+            log.info "We have new DIFF: " + String.format("%.2f", BTCUSD.bid - BTCUSDT.ask) + "USD"
+            log.info "--------------------------------------------------"
 
             // проверка покупательной способности wallet
             def bitfinexBTCBalance = balanceBitfinexBTC
-            def bitfinexBTCLimit = bitfinexAccountService.balanceRepository().getLimit("BTC")
+            def bitfinexBTCLimit = lotBtc * 2
 
             if (bitfinexBTCBalance <= bitfinexBTCLimit) {
                 log.warn "Bitfinex BTC balance: " + bitfinexBTCBalance
@@ -113,7 +128,7 @@ class TestStrategy implements StrategyService {
             }
 
             def binanceUSDTBalance = balanceBinanceUSD
-            def binanceUSDTLimit = binanceAccountService.balanceRepository().getLimit("USDT")
+            def binanceUSDTLimit = diffBtc
 
             if (binanceUSDTBalance <= binanceUSDTLimit) {
                 log.warn "Binance USDT balance: " + binanceUSDTBalance
@@ -121,21 +136,20 @@ class TestStrategy implements StrategyService {
             }
 
             log.info "--------------------------------------------------"
-            log.info "Do arbitrage: " + String.format("%f", lot) + "BTC"
+            log.info "Do arbitrage: " + String.format("%f", lotBtc) + "BTC"
             log.info "BTCUSD:" + BTCUSD.bid + "; BTCUSDT:" + BTCUSDT.ask
-            log.info "We have new DIFF: " + String.format("%.2f", BTCUSD.bid - BTCUSDT.ask) + "USD"
             log.info "--------------------------------------------------"
 
-            balanceBitfinexBTC = balanceBitfinexBTC - lot
-            balanceBitfinexUSD = balanceBitfinexUSD + (lot * BTCUSD.bid)
+            balanceBitfinexBTC = balanceBitfinexBTC - lotBtc
+            balanceBitfinexUSD = balanceBitfinexUSD + (lotBtc * BTCUSD.bid)
 
             log.info "--------------------------------------------------"
             log.info "Bitfinex BTC: " + balanceBitfinexBTC
             log.info "Bitfinex USD: " + balanceBitfinexUSD
             log.info "-------------- BTCUSD SELL RESULT ----------------"
 
-            balanceBinanceUSD = balanceBinanceUSD - (lot * BTCUSDT.ask)
-            balanceBinanceBTC = balanceBinanceBTC + lot
+            balanceBinanceUSD = balanceBinanceUSD - (lotBtc * BTCUSDT.ask)
+            balanceBinanceBTC = balanceBinanceBTC + lotBtc
 
             log.info "--------------------------------------------------"
             log.info "Binance BTC: " + balanceBinanceBTC
@@ -145,7 +159,105 @@ class TestStrategy implements StrategyService {
     }
 
     @Async
-    def LTCUSDandLTCUSDT() {
-        // method body
+    def ETHUSDandETHUSDT() {
+        def ETHUSDT = binanceAccountService.candleRepository().getLastCandle("ETHUSDT")
+        def ETHUSD = bitfinexAccountService.candleRepository().getLastCandle("ETHUSD")
+        if (ETHUSDT == null || ETHUSD == null) return
+
+        // время пары свечей
+        def candleDateTime = ETHUSDT.dateTime.isAfter(ETHUSD.dateTime) ? ETHUSDT.dateTime : ETHUSD.dateTime
+        if (candleDateTime == lastUpdateEthUsd) return else lastUpdateEthUsd = candleDateTime
+
+        // Если {цена продажи} ETHUSDT больше {цена покупки} ETHUSD чем {diff}
+        if (ETHUSDT.bid - ETHUSD.ask >= diffEth) {
+
+            log.info "--------------------------------------------------"
+            log.info "We have new DIFF: " + String.format("%.2f", ETHUSDT.bid - ETHUSD.ask) + "USD"
+            log.info "--------------------------------------------------"
+
+            // проверка покупательной способности wallet
+            def binanceETHBalance = balanceBinanceETH
+            def binanceETHLimit = lotEth * 2
+
+            if (binanceETHBalance <= binanceETHLimit) {
+                log.warn "Binance ETH balance: " + binanceETHBalance
+                return
+            }
+
+            def bitfinexUSDBalance = balanceBitfinexUSD
+            def bitfinexUSDLimit = diffEth
+
+            if (bitfinexUSDBalance <= bitfinexUSDLimit) {
+                log.warn "Bitfinex USD balance: " + bitfinexUSDBalance
+                return
+            }
+
+            log.info "--------------------------------------------------"
+            log.info "Do arbitrage: " + String.format("%f", lotEth) + "ETH"
+            log.info "ETHUSDT:" + ETHUSDT.bid + "; ETHUSD:" + ETHUSD.ask
+            log.info "--------------------------------------------------"
+
+            balanceBinanceETH = balanceBinanceETH - lotEth
+            balanceBinanceUSD = balanceBinanceUSD + (lotEth * ETHUSDT.bid)
+
+            log.info "--------------------------------------------------"
+            log.info "Binance ETH: " + balanceBinanceETH
+            log.info "Binance USD: " + balanceBinanceUSD
+            log.info "------------- ETHUSDT SELL RESULT ----------------"
+
+            balanceBitfinexUSD = balanceBitfinexUSD - (lotEth * ETHUSD.ask)
+            balanceBitfinexETH = balanceBitfinexETH + lotEth
+
+            log.info "--------------------------------------------------"
+            log.info "Bitfinex ETH: " + balanceBitfinexETH
+            log.info "Bitfinex USD: " + balanceBitfinexUSD
+            log.info "-------------- ETHUSD BUY RESULT -----------------"
+        }
+
+        // Если {цена продажи} ETHUSD больше {цена покупки} ETHUSDT чем {diff}
+        if (ETHUSD.bid - ETHUSDT.ask >= diffEth) {
+
+            log.info "--------------------------------------------------"
+            log.info "We have new DIFF: " + String.format("%.2f", ETHUSD.bid - ETHUSDT.ask) + "USD"
+            log.info "--------------------------------------------------"
+
+            // проверка покупательной способности wallet
+            def bitfinexETHBalance = balanceBitfinexETH
+            def bitfinexETHLimit = lotEth * 2
+
+            if (bitfinexETHBalance <= bitfinexETHLimit) {
+                log.warn "Bitfinex ETH balance: " + bitfinexETHBalance
+                return
+            }
+
+            def binanceUSDTBalance = balanceBinanceUSD
+            def binanceUSDTLimit = diffEth
+
+            if (binanceUSDTBalance <= binanceUSDTLimit) {
+                log.warn "Binance USDT balance: " + binanceUSDTBalance
+                return
+            }
+
+            log.info "--------------------------------------------------"
+            log.info "Do arbitrage: " + String.format("%f", lotEth) + "ETH"
+            log.info "ETHUSD:" + ETHUSD.bid + "; ETHUSDT:" + ETHUSDT.ask
+            log.info "--------------------------------------------------"
+
+            balanceBitfinexETH = balanceBitfinexETH - lotEth
+            balanceBitfinexUSD = balanceBitfinexUSD + (lotEth * ETHUSD.bid)
+
+            log.info "--------------------------------------------------"
+            log.info "Bitfinex ETH: " + balanceBitfinexETH
+            log.info "Bitfinex USD: " + balanceBitfinexUSD
+            log.info "-------------- ETHUSD SELL RESULT ----------------"
+
+            balanceBinanceUSD = balanceBinanceUSD - (lotEth * ETHUSDT.ask)
+            balanceBinanceETH = balanceBinanceETH + lotEth
+
+            log.info "--------------------------------------------------"
+            log.info "Binance ETH: " + balanceBinanceETH
+            log.info "Binance USD: " + balanceBinanceUSD
+            log.info "------------- ETHUSDT BUY RESULT -----------------"
+        }
     }
 }
