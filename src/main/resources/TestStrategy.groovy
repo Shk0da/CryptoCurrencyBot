@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled
  */
 class TestStrategy implements StrategyService {
 
-    double diffPercent = 0.3 // in %
+    double diffPercent = 0.35 // in %
 
     double diffBtc = 150 // in USD
     double lotBtc = 0.002 // in BTC :: BitFinex minimum size for BTC/USD is 0.0002
@@ -100,17 +100,15 @@ class TestStrategy implements StrategyService {
             log.info "BTCUSDT:" + BTCUSDT.bid + "; BTCUSD:" + BTCUSD.ask
             log.info "--------------------------------------------------"
 
-            balanceBinanceBTC = balanceBinanceBTC - lotBtc
+            balanceBinanceBTC = balanceBinanceBTC - lotBtc - (lotBtc / 100 * binanceComission)
             balanceBinanceUSD = balanceBinanceUSD + (lotBtc * BTCUSDT.bid)
-            balanceBinanceUSD = balanceBinanceUSD - (lotBtc * BTCUSDT.bid) * binanceComission
 
             log.info "--------------------------------------------------"
             log.info "Binance BTC: " + balanceBinanceBTC
             log.info "Binance USD: " + balanceBinanceUSD
             log.info "------------- BTCUSDT SELL RESULT ----------------"
 
-            balanceBitfinexUSD = balanceBitfinexUSD - (lotBtc * BTCUSD.ask)
-            balanceBitfinexUSD = balanceBitfinexUSD - (lotBtc * BTCUSDT.ask) * bitfinexComission
+            balanceBitfinexUSD = balanceBitfinexUSD - (lotBtc * BTCUSD.ask) - ((lotBtc * BTCUSDT.ask) / 100 * bitfinexComission)
             balanceBitfinexBTC = balanceBitfinexBTC + lotBtc
 
             log.info "--------------------------------------------------"
@@ -149,17 +147,15 @@ class TestStrategy implements StrategyService {
             log.info "BTCUSD:" + BTCUSD.bid + "; BTCUSDT:" + BTCUSDT.ask
             log.info "--------------------------------------------------"
 
-            balanceBitfinexBTC = balanceBitfinexBTC - lotBtc
+            balanceBitfinexBTC = balanceBitfinexBTC - lotBtc - (lotBtc / 100 * (bitfinexComission / 2))
             balanceBitfinexUSD = balanceBitfinexUSD + (lotBtc * BTCUSD.bid)
-            balanceBitfinexUSD = balanceBitfinexUSD - (lotBtc * BTCUSDT.bid) * (bitfinexComission / 2)
 
             log.info "--------------------------------------------------"
             log.info "Bitfinex BTC: " + balanceBitfinexBTC
             log.info "Bitfinex USD: " + balanceBitfinexUSD
             log.info "-------------- BTCUSD SELL RESULT ----------------"
 
-            balanceBinanceUSD = balanceBinanceUSD - (lotBtc * BTCUSDT.ask)
-            balanceBinanceUSD = balanceBinanceUSD - (lotBtc * BTCUSDT.ask) * binanceComission
+            balanceBinanceUSD = balanceBinanceUSD - (lotBtc * BTCUSDT.ask) - ((lotBtc * BTCUSDT.ask) / 100 * binanceComission)
             balanceBinanceBTC = balanceBinanceBTC + lotBtc
 
             log.info "--------------------------------------------------"
@@ -212,17 +208,15 @@ class TestStrategy implements StrategyService {
             log.info "ETHUSDT:" + ETHUSDT.bid + "; ETHUSD:" + ETHUSD.ask
             log.info "--------------------------------------------------"
 
-            balanceBinanceETH = balanceBinanceETH - lotEth
+            balanceBinanceETH = balanceBinanceETH - lotEth - (lotEth / 100 * binanceComission)
             balanceBinanceUSD = balanceBinanceUSD + (lotEth * ETHUSDT.bid)
-            balanceBinanceUSD = balanceBinanceUSD - (lotEth * ETHUSDT.bid) * binanceComission
 
             log.info "--------------------------------------------------"
             log.info "Binance ETH: " + balanceBinanceETH
             log.info "Binance USD: " + balanceBinanceUSD
             log.info "------------- ETHUSDT SELL RESULT ----------------"
 
-            balanceBitfinexUSD = balanceBitfinexUSD - (lotEth * ETHUSD.ask)
-            balanceBitfinexUSD = balanceBitfinexUSD - (lotEth * ETHUSDT.ask) * bitfinexComission
+            balanceBitfinexUSD = balanceBitfinexUSD - (lotEth * ETHUSD.ask) - ((lotEth * ETHUSDT.ask) / 100 * bitfinexComission)
             balanceBitfinexETH = balanceBitfinexETH + lotEth
 
             log.info "--------------------------------------------------"
@@ -261,17 +255,15 @@ class TestStrategy implements StrategyService {
             log.info "ETHUSD:" + ETHUSD.bid + "; ETHUSDT:" + ETHUSDT.ask
             log.info "--------------------------------------------------"
 
-            balanceBitfinexETH = balanceBitfinexETH - lotEth
+            balanceBitfinexETH = balanceBitfinexETH - lotEth - (lotEth / 100 * (bitfinexComission / 2))
             balanceBitfinexUSD = balanceBitfinexUSD + (lotEth * ETHUSD.bid)
-            balanceBitfinexUSD = balanceBitfinexUSD - (lotEth * ETHUSDT.bid) * (bitfinexComission / 2)
 
             log.info "--------------------------------------------------"
             log.info "Bitfinex ETH: " + balanceBitfinexETH
             log.info "Bitfinex USD: " + balanceBitfinexUSD
             log.info "-------------- ETHUSD SELL RESULT ----------------"
 
-            balanceBinanceUSD = balanceBinanceUSD - (lotEth * ETHUSDT.ask)
-            balanceBinanceUSD = balanceBinanceUSD - (lotEth * ETHUSDT.ask) * binanceComission
+            balanceBinanceUSD = balanceBinanceUSD - (lotEth * ETHUSDT.ask) - ((lotEth * ETHUSDT.ask) / 100 * binanceComission)
             balanceBinanceETH = balanceBinanceETH + lotEth
 
             log.info "--------------------------------------------------"
