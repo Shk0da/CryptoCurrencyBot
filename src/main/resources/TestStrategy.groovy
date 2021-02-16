@@ -33,12 +33,12 @@ class TestStrategy implements StrategyService {
     def lastUpdateEthUsd
     def log = LoggerFactory.getLogger(Strategy.class)
 
-    def binanceComission = 0.2 // in %
+    def binanceComission = 0.1 // in %
     def balanceBinanceUSD = 250
     def balanceBinanceBTC = 0.0
     def balanceBinanceETH = 0.0
 
-    def bitfinexComission = 0.3 // in %
+    def bitfinexComission = 0.2 // in %
     def balanceBitfinexUSD = 0.0
     def balanceBitfinexBTC = 0.005
     def balanceBitfinexETH = 0.0
@@ -151,7 +151,7 @@ class TestStrategy implements StrategyService {
 
             balanceBitfinexBTC = balanceBitfinexBTC - lotBtc
             balanceBitfinexUSD = balanceBitfinexUSD + (lotBtc * BTCUSD.bid)
-            balanceBitfinexUSD = balanceBitfinexUSD - (lotBtc * BTCUSDT.bid) * bitfinexComission
+            balanceBitfinexUSD = balanceBitfinexUSD - (lotBtc * BTCUSDT.bid) * (bitfinexComission / 2)
 
             log.info "--------------------------------------------------"
             log.info "Bitfinex BTC: " + balanceBitfinexBTC
@@ -263,7 +263,7 @@ class TestStrategy implements StrategyService {
 
             balanceBitfinexETH = balanceBitfinexETH - lotEth
             balanceBitfinexUSD = balanceBitfinexUSD + (lotEth * ETHUSD.bid)
-            balanceBitfinexUSD = balanceBitfinexUSD - (lotEth * ETHUSDT.bid) * bitfinexComission
+            balanceBitfinexUSD = balanceBitfinexUSD - (lotEth * ETHUSDT.bid) * (bitfinexComission / 2)
 
             log.info "--------------------------------------------------"
             log.info "Bitfinex ETH: " + balanceBitfinexETH
