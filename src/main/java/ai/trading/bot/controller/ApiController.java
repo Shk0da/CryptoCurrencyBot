@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -64,6 +65,24 @@ public class ApiController {
         String result = isAllAllowed ? "on" : "off";
         log.debug("trading: {}", result);
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @CacheEvict(allEntries = true, cacheNames = {"ordersActive", "ordersHistory"})
+    @GetMapping(value = "/cancel", params = {"market", "symbol", "orderId"}, produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> cancelOrder(String market, String symbol, Long orderId) {
+        StockMarket stockMarket = StockMarket.of(market);
+        if (null == stockMarket || !stockMarketKeeperService.isEnabled(stockMarket)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        try {
+            AccountService accountService = stockMarketKeeperService.accountServiceByMarket(stockMarket);
+            Object result = accountService.cancelOrder(symbol, orderId);
+            log.debug("Cancel order: " + result.toString());
+            return new ResponseEntity<>("OK", HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping(value = "/trading/status", produces = MediaType.TEXT_PLAIN_VALUE)

@@ -2,7 +2,7 @@ feather.replace();
 
 var chartWrapper = '<canvas id="cryptoChart" class="my-4" width="900" height="380"></canvas>';
 var app = angular.module("dashboard", [])
-    .controller("mainCtr", function($scope, $interval, $http) {
+    .controller("mainCtr", function ($scope, $interval, $http) {
 
         $scope.locaton = "";
 
@@ -10,11 +10,11 @@ var app = angular.module("dashboard", [])
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        $http.get($scope.locaton + "/api/markets").then(function(response) {
+        $http.get($scope.locaton + "/api/markets").then(function (response) {
             $scope.markets = response.data;
         });
 
-        $http.get($scope.locaton + "/api/trading/status").then(function(response) {
+        $http.get($scope.locaton + "/api/trading/status").then(function (response) {
             if (response.data == "on") {
                 $scope.power = "On"
                 $(".power").css({'color': '#99CC18'});
@@ -24,8 +24,8 @@ var app = angular.module("dashboard", [])
             }
         });
 
-        $scope.powerOnOff = function() {
-            $http.get($scope.locaton + "/api/trading?active=" + ($scope.power != "On")).then(function(response) {
+        $scope.powerOnOff = function () {
+            $http.get($scope.locaton + "/api/trading?active=" + ($scope.power != "On")).then(function (response) {
                 if (response.data == "on") {
                     $scope.power = "On"
                     $(".power").css({'color': '#99CC18'});
@@ -33,17 +33,19 @@ var app = angular.module("dashboard", [])
                     $scope.power = "Off"
                     $(".power").css({'color': 'red'});
                 }
-            }, function(error){console.log(error);}) ;
+            }, function (error) {
+                console.log(error);
+            });
         }
 
         var logRefresh;
-        $scope.showLog = function() {
+        $scope.showLog = function () {
             $("main").addClass("d-none");
             $("#logArea").removeClass("d-none");
             $("#logArea").html("Loading, wait...");
 
-            logRefresh = $interval(function() {
-                $http.get($scope.locaton + "/api/logging").then(function(response) {
+            logRefresh = $interval(function () {
+                $http.get($scope.locaton + "/api/logging").then(function (response) {
                     $("#logArea").html("<pre>" + response.data.replace("\n", "<br />", "g") + "</pre>");
                 });
             }, 2000);
@@ -79,6 +81,21 @@ var app = angular.module("dashboard", [])
                 $scope.historyOrders = response.data;
                 $("#logArea").addClass("d-none");
                 $("main").removeClass("d-none");
+            });
+        }
+
+        $scope.cancel = async function (event, marketName, symbol, id) {
+            if (angular.isDefined(logRefresh)) {
+                $interval.cancel(logRefresh);
+                logRefresh = undefined;
+            }
+            await sleep(1000);
+            $http.get($scope.locaton + "/api/cancel?market=" + marketName + "&symbol=" + symbol + "&orderId=" + id).then(function (response) {
+                if (response.data == "OK") {
+                    $("#activeOrder-" + marketName + "-" + id).html("");
+                }
+            }, function (error) {
+                console.log(error);
             });
         }
     });
