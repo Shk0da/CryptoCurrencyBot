@@ -2,6 +2,8 @@ package ai.trading.bot.repository.binance;
 
 import ai.trading.bot.repository.BasicBalanceRepository;
 import ai.trading.bot.service.AccountService;
+import ai.trading.bot.service.StockMarket;
+import ai.trading.bot.service.StockMarketKeeperService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,8 +17,13 @@ import java.util.List;
 public class BinanceBalanceRepository extends BasicBalanceRepository {
 
     public BinanceBalanceRepository(TaskScheduler scheduler,
+                                    StockMarketKeeperService stockMarketKeeperService,
                                     @Qualifier("binanceAccountService") AccountService accountService,
                                     @Value("#{'${binance.balance.limits}'.split(';')}") List<String> limits) {
+        if (!stockMarketKeeperService.isEnabled(StockMarket.Binance)) {
+            return;
+        }
+
         limits.forEach(mapLimit -> {
             String[] symbolToLimit = mapLimit.split(":");
             setLimit(symbolToLimit[0], Double.valueOf(symbolToLimit[1]));

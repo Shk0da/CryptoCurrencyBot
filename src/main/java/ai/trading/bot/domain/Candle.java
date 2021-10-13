@@ -3,7 +3,8 @@ package ai.trading.bot.domain;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-import org.joda.time.DateTime;
+
+import java.util.Date;
 
 @Getter
 @Builder
@@ -13,5 +14,5 @@ public class Candle {
     private Double price;
     private Double bid;
     private Double ask;
-    private DateTime dateTime;
+    private Date dateTime;
 }

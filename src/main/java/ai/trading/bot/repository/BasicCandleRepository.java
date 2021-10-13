@@ -5,9 +5,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.Getter;
 import lombok.Synchronized;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -19,7 +19,7 @@ public class BasicCandleRepository implements CandleRepository {
     @Value("${candle.repository.limit:21}")
     private Integer limit;
 
-    private final Map<String, TreeMap<DateTime, Candle>> candles = Maps.newHashMap();
+    private final Map<String, TreeMap<Date, Candle>> candles = Maps.newHashMap();
 
     @Override
     public List<Candle> getCandles(String symbol) {
@@ -44,6 +44,14 @@ public class BasicCandleRepository implements CandleRepository {
         List<Candle> current = getCandles(symbol);
         current.addAll(candles);
         this.candles.put(symbol, getMapFromList(current));
+    }
+
+    @Override
+    @Synchronized
+    public void addCandle(Candle candle) {
+        List<Candle> current = getCandles(candle.getSymbol());
+        current.add(candle);
+        this.candles.put(candle.getSymbol(), getMapFromList(current));
     }
 
     @Override
@@ -79,12 +87,10 @@ public class BasicCandleRepository implements CandleRepository {
         return getCandles(symbol).size();
     }
 
-
-    private TreeMap<DateTime, Candle> getMapFromList(List<Candle> current) {
+    private TreeMap<Date, Candle> getMapFromList(List<Candle> current) {
         if (current.size() > limit * 1.2) {
             current = current.subList(current.size() - limit, current.size());
         }
-
         return current.stream()
                 .filter(candle -> candle.getPrice() > 0)
                 .collect(Collectors.toMap(Candle::getDateTime, item -> item, (a, b) -> b, TreeMap::new));

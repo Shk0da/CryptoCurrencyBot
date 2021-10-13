@@ -1,10 +1,15 @@
 package ai.trading.bot.service.binance;
 
-import ai.trading.bot.domain.*;
+import ai.trading.bot.domain.ActiveOrder;
+import ai.trading.bot.domain.Candle;
+import ai.trading.bot.domain.HistoryOrder;
+import ai.trading.bot.domain.Order;
+import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.BalanceRepository;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.repository.InstrumentRepository;
 import ai.trading.bot.service.AccountService;
+import ai.trading.bot.service.StockMarket;
 import com.google.common.collect.Lists;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -14,7 +19,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +32,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +101,7 @@ public class BinanceAccountService implements AccountService {
                     .price(responsePrice.get("price").getAsDouble())
                     .ask(responseBookTicker.get("askPrice").getAsDouble())
                     .bid(responseBookTicker.get("bidPrice").getAsDouble())
-                    .dateTime(DateTime.now())
+                    .dateTime(new Date())
                     .build();
 
             log.debug(candle.toString());
@@ -238,7 +243,7 @@ public class BinanceAccountService implements AccountService {
     public List<HistoryOrder> getHistoryOrders(int limit) {
         try {
             List<HistoryOrder> result = Lists.newArrayList();
-            instrumentRepository.getBinanceSymbols().forEach(symbol -> {
+            instrumentRepository.getSymbolsByMarket(StockMarket.Binance).forEach(symbol -> {
                 String query = "symbol=" + symbol + "&limit=" + limit + "&";
                 List<Object> response = (List<Object>) restTemplate
                         .exchange(

@@ -4,6 +4,7 @@ import ai.trading.bot.domain.Candle;
 import ai.trading.bot.provider.ApplicationContextProvider;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.service.AccountService;
+import ai.trading.bot.service.LearnService;
 import ai.trading.bot.service.StockMarket;
 import akka.actor.UntypedAbstractActor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +22,10 @@ public class CollectorActor extends UntypedAbstractActor {
 
     private final String instrument;
     private final StockMarket market;
+
     private CandleRepository candleRepository;
     private AccountService accountService;
+    private LearnService learnService;
 
     public CollectorActor(StockMarket market, String instrument) {
         this.market = market;
@@ -42,11 +45,17 @@ public class CollectorActor extends UntypedAbstractActor {
                 .getApplicationContext()
                 .getBean(accountServiceName);
         log.debug("{}::{} accountService has been init: {}::{}", market, instrument, accountServiceName, accountService);
+
+        String learnServiceName = market.name().toLowerCase() + "LearnService";
+        learnService = (LearnService) ApplicationContextProvider
+                .getApplicationContext()
+                .getBean(learnServiceName);
+        log.debug("{}::{} learnService has been init: {}::{}", market, instrument, learnServiceName, learnService);
     }
 
     @Override
-    public void onReceive(Object message) throws Throwable {
-        if (Messages.Collect.equals(message)) {
+    public void onReceive(Object message) {
+        if (Messages.COLLECT.equals(message)) {
             try {
                 List<Candle> candles = accountService.getCandles(instrument)
                         .stream()
@@ -57,6 +66,7 @@ public class CollectorActor extends UntypedAbstractActor {
 
                 if (!candles.isEmpty()) {
                     candleRepository.addCandles(instrument, candles);
+                    learnService.addCandles(instrument, candles);
                 }
             } catch (Exception ex) {
                 log.error("{}: {}", market, ex.getMessage());

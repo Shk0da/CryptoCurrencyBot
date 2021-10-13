@@ -1,6 +1,10 @@
 package ai.trading.bot.service.bitfinex;
 
-import ai.trading.bot.domain.*;
+import ai.trading.bot.domain.ActiveOrder;
+import ai.trading.bot.domain.Candle;
+import ai.trading.bot.domain.HistoryOrder;
+import ai.trading.bot.domain.Order;
+import ai.trading.bot.domain.Wallet;
 import ai.trading.bot.repository.BalanceRepository;
 import ai.trading.bot.repository.CandleRepository;
 import ai.trading.bot.service.AccountService;
@@ -12,7 +16,6 @@ import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,10 +29,11 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -87,7 +91,7 @@ public class BitfinexAccountService implements AccountService {
             long timestamp = (long) (response.get("timestamp").getAsDouble() * 1000);
             candle = Candle.builder()
                     .symbol(symbol)
-                    .dateTime(new DateTime(timestamp))
+                    .dateTime(new Date(timestamp))
                     .ask(response.get("ask").getAsDouble())
                     .bid(response.get("bid").getAsDouble())
                     .price(response.get("last_price").getAsDouble())
@@ -236,14 +240,15 @@ public class BitfinexAccountService implements AccountService {
     private ResponseEntity<Object> sendPostRequest(String uri) {
         try {
             TimeUnit.SECONDS.sleep(1); // fcking bitfinex frod
-        } catch (InterruptedException nothing) {}
+        } catch (InterruptedException nothing) {
+        }
         return sendPostRequest(uri, null);
     }
 
     private ResponseEntity<Object> sendPostRequest(String uri, JsonObject data) {
         JsonObject body = new JsonObject();
         body.addProperty("request", "/v1/" + uri);
-        body.addProperty("nonce", Long.toString(DateTime.now().getMillis() * 1000));
+        body.addProperty("nonce", Long.toString(new Date().getTime() * 1000));
         if (data != null && data.size() > 0) {
             data.keySet().forEach(key -> {
                 if ("order_id".equals(key)) {
@@ -255,7 +260,7 @@ public class BitfinexAccountService implements AccountService {
         }
 
         log.debug("nonce: {}", body.get("nonce").getAsString());
-        log.debug("body: {}", body.toString());
+        log.debug("body: {}", body);
 
         return restTemplate
                 .exchange(
@@ -264,10 +269,6 @@ public class BitfinexAccountService implements AccountService {
                         new HttpEntity<>(body.toString(), getAuthHeader(body)),
                         Object.class
                 );
-    }
-
-    private HttpHeaders getAuthHeader() {
-        return getAuthHeader(new JsonObject());
     }
 
     private HttpHeaders getAuthHeader(JsonObject jsonObject) {
@@ -286,12 +287,12 @@ public class BitfinexAccountService implements AccountService {
     private String getSignature(String payload, String secretKey) {
         String digest = null;
         try {
-            SecretKeySpec key = new SecretKeySpec((secretKey).getBytes("UTF-8"), "HmacSHA384");
+            SecretKeySpec key = new SecretKeySpec((secretKey).getBytes(StandardCharsets.UTF_8), "HmacSHA384");
             Mac mac = Mac.getInstance("HmacSHA384");
             mac.init(key);
 
             StringBuilder hash = new StringBuilder();
-            byte[] bytes = mac.doFinal(payload.getBytes("ASCII"));
+            byte[] bytes = mac.doFinal(payload.getBytes(StandardCharsets.US_ASCII));
             for (byte aByte : bytes) {
                 String hex = Integer.toHexString(0xFF & aByte);
                 if (hex.length() == 1) {
@@ -300,7 +301,7 @@ public class BitfinexAccountService implements AccountService {
                 hash.append(hex);
             }
             digest = hash.toString();
-        } catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException ex) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
             log.error(ex.getMessage());
         }
 

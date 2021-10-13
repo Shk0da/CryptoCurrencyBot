@@ -10,9 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 public class SpringDIActor implements IndirectActorProducer {
 
     private Actor actorInstance;
-    private Class<? extends Actor> type;
-    private String instrument;
-    private StockMarket market;
+    private final Class<? extends Actor> type;
+    private final String instrument;
+    private final StockMarket market;
 
     public SpringDIActor(Class<? extends Actor> type, StockMarket market, String instrument) {
         this.type = type;
@@ -34,6 +34,7 @@ public class SpringDIActor implements IndirectActorProducer {
                 newActor = type.getConstructor(StockMarket.class, String.class).newInstance(market, instrument);
             } catch (Exception ex) {
                 log.error("Unable to create actor of type: {}({}, {}). Because {}.", type, market, instrument, ex.getMessage());
+                return null;
             }
         }
 

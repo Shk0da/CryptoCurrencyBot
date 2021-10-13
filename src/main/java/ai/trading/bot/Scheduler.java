@@ -4,6 +4,7 @@ import ai.trading.bot.actor.Messages;
 import ai.trading.bot.config.ActorConfig;
 import ai.trading.bot.repository.InstrumentRepository;
 import ai.trading.bot.service.StockMarket;
+import ai.trading.bot.service.StockMarketKeeperService;
 import akka.actor.ActorSystem;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,19 +24,21 @@ public class Scheduler {
     @Autowired
     private InstrumentRepository instrumentRepository;
 
+    @Autowired
+    private StockMarketKeeperService stockMarketKeeperService;
+
     @Scheduled(cron = "${scheduler.candle-collect.cron}")
     public void fireCollect() {
         if (actorSystem == null) return;
 
-        instrumentRepository.getBinanceSymbols().forEach(symbol -> actorSystem
-                .actorSelection(ActorConfig.ACTOR_PATH_HEAD + "CollectorActor_" + StockMarket.Binance + "_" + symbol)
-                .tell(Messages.Collect, actorSystem.guardian())
-        );
+        for (StockMarket market : StockMarket.values()) {
+            if (!stockMarketKeeperService.isEnabled(market)) continue;
 
-        instrumentRepository.getBitfinexSymbols().forEach(symbol -> actorSystem
-                .actorSelection(ActorConfig.ACTOR_PATH_HEAD + "CollectorActor_" + StockMarket.BitFinex + "_" + symbol)
-                .tell(Messages.Collect, actorSystem.guardian())
-        );
+            instrumentRepository.getSymbolsByMarket(market).forEach(symbol -> actorSystem
+                    .actorSelection(ActorConfig.ACTOR_PATH_HEAD + "CollectorActor_" + market + "_" + symbol)
+                    .tell(Messages.COLLECT, actorSystem.guardian())
+            );
+        }
     }
 
     @CacheEvict(allEntries = true, cacheNames = {"status", "ordersActive", "ordersHistory"})

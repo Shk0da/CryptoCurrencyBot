@@ -18,6 +18,8 @@ public interface CandleRepository {
 
     void addCandles(String symbol, List<Candle> candles);
 
+    void addCandle(Candle candle);
+
     Candle getLastCandle(String symbol);
 
     List<Candle> getLastCandles(String symbol, Integer size);

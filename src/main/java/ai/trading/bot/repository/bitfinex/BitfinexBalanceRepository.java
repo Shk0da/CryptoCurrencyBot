@@ -2,6 +2,8 @@ package ai.trading.bot.repository.bitfinex;
 
 import ai.trading.bot.repository.BasicBalanceRepository;
 import ai.trading.bot.service.AccountService;
+import ai.trading.bot.service.StockMarket;
+import ai.trading.bot.service.StockMarketKeeperService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,8 +17,13 @@ import java.util.List;
 public class BitfinexBalanceRepository extends BasicBalanceRepository {
 
     public BitfinexBalanceRepository(TaskScheduler scheduler,
+                                     StockMarketKeeperService stockMarketKeeperService,
                                      @Qualifier("bitfinexAccountService") AccountService accountService,
                                      @Value("#{'${bitfinex.balance.limits}'.split(';')}") List<String> limits) {
+        if (!stockMarketKeeperService.isEnabled(StockMarket.BitFinex)) {
+            return;
+        }
+
         limits.forEach(mapLimit -> {
             String[] symbolToLimit = mapLimit.split(":");
             setLimit(symbolToLimit[0], Double.valueOf(symbolToLimit[1]));
