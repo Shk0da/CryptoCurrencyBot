@@ -199,7 +199,7 @@ public class LearnActor extends UntypedAbstractActor {
 
         try {
             setStatus(Status.TRAINED);
-            log.info("Start train: {}", instrument);
+            log.info("Start train: {} {}", market, instrument);
             StockDataSetIterator iterator = new StockDataSetIterator(candles, 1.0);
             neuralNetwork = LSTMNetwork.buildLstmNetworks(iterator);
             closeMin = iterator.getCloses()[0];

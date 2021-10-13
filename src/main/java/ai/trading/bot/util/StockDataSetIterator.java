@@ -28,12 +28,13 @@ public class StockDataSetIterator implements DataSetIterator {
     private static final int MINI_BATCH_SIZE = 32;
 
     private DataSetPreProcessor dataSetPreProcessor;
-    private final List<Integer> exampleStartOffsets = new LinkedList<>();
+
+    private final LinkedList<Integer> exampleStartOffsets = new LinkedList<>();
 
     private final List<Candle> train;
+
     @Getter
     private final List<Pair<INDArray, Double>> test;
-
     @Getter
     double[][] indicators;
     @Getter
@@ -43,17 +44,11 @@ public class StockDataSetIterator implements DataSetIterator {
     @Getter
     double[] closes = new double[]{Double.MAX_VALUE, Double.MIN_VALUE};
 
-    private final double splitRatio;
-    private final List<Candle> stockDataList;
-
     public StockDataSetIterator(List<Candle> stockDataList) {
         this(stockDataList, 1.0);
     }
 
     public StockDataSetIterator(List<Candle> stockDataList, double splitRatio) {
-        this.stockDataList = stockDataList;
-        this.splitRatio = splitRatio;
-
         int split = (int) Math.round(stockDataList.size() * splitRatio);
 
         int initCapacity = VECTOR_K + 1;
@@ -109,7 +104,7 @@ public class StockDataSetIterator implements DataSetIterator {
         INDArray input = Nd4j.create(new int[]{actualMiniBatchSize, inputColumns(), LENGTH}, 'f');
         INDArray label = Nd4j.create(new int[]{actualMiniBatchSize, totalOutcomes(), LENGTH}, 'f');
         for (int index = 0; index < actualMiniBatchSize - 1; index++) {
-            int startIdx = exampleStartOffsets.remove(0) + VECTOR_SIZE_2;
+            int startIdx = exampleStartOffsets.removeFirst() + VECTOR_SIZE_2;
             int l = startIdx - VECTOR_SIZE_2;
             int window = startIdx + LENGTH;
             for (int i = startIdx; i < window - 1; i++) {
@@ -160,7 +155,7 @@ public class StockDataSetIterator implements DataSetIterator {
 
     @Override
     public void remove() {
-        //
+        // nothing
     }
 
     @Override
@@ -190,7 +185,7 @@ public class StockDataSetIterator implements DataSetIterator {
 
     @Override
     public void reset() {
-        this.initializeOffsets();
+        initializeOffsets();
     }
 
     @Override
@@ -200,12 +195,12 @@ public class StockDataSetIterator implements DataSetIterator {
 
     @Override
     public int cursor() {
-        return this.totalExamples() - this.exampleStartOffsets.size();
+        return totalExamples() - exampleStartOffsets.size();
     }
 
     @Override
     public int numExamples() {
-        return this.totalExamples();
+        return totalExamples();
     }
 
     @Override
@@ -215,7 +210,7 @@ public class StockDataSetIterator implements DataSetIterator {
 
     @Override
     public DataSetPreProcessor getPreProcessor() {
-        return this.dataSetPreProcessor;
+        return dataSetPreProcessor;
     }
 
     @Override
@@ -225,12 +220,12 @@ public class StockDataSetIterator implements DataSetIterator {
 
     @Override
     public boolean hasNext() {
-        return this.exampleStartOffsets.size() > 0;
+        return exampleStartOffsets.size() > 0;
     }
 
     @Override
     public DataSet next() {
-        return this.next(MINI_BATCH_SIZE);
+        return next(MINI_BATCH_SIZE);
     }
 
     private void initializeIndicators(List<Candle> stockDataList) {
