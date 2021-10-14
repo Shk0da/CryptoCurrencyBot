@@ -4,13 +4,12 @@ import ai.trading.bot.domain.Candle;
 import com.clearspring.analytics.util.Lists;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.DataSetPreProcessor;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.primitives.Pair;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -20,12 +19,12 @@ import java.util.NoSuchElementException;
 @Slf4j
 public class StockDataSetIterator implements DataSetIterator {
 
-    private static final int CHUNK_SHIFT = 91;
-    private static final int VECTOR_K = 5;
-    private static final int VECTOR_SIZE_1 = 5 * VECTOR_K;
-    private static final int VECTOR_SIZE_2 = 5;
-    private static final int LENGTH = 22;
-    private static final int MINI_BATCH_SIZE = 32;
+    public static final int CHUNK_SHIFT = 91;
+    public static final int VECTOR_K = 5;
+    public static final int VECTOR_SIZE_1 = 5 * VECTOR_K;
+    public static final int VECTOR_SIZE_2 = 5;
+    public static final int LENGTH = 22;
+    public static final int MINI_BATCH_SIZE = 32;
 
     private DataSetPreProcessor dataSetPreProcessor;
 
@@ -103,11 +102,11 @@ public class StockDataSetIterator implements DataSetIterator {
         int actualMiniBatchSize = Math.min(num, exampleStartOffsets.size());
         INDArray input = Nd4j.create(new int[]{actualMiniBatchSize, inputColumns(), LENGTH}, 'f');
         INDArray label = Nd4j.create(new int[]{actualMiniBatchSize, totalOutcomes(), LENGTH}, 'f');
-        for (int index = 0; index < actualMiniBatchSize - 1; index++) {
+        for (int index = 0; index < actualMiniBatchSize; index++) {
             int startIdx = exampleStartOffsets.removeFirst() + VECTOR_SIZE_2;
             int l = startIdx - VECTOR_SIZE_2;
             int window = startIdx + LENGTH;
-            for (int i = startIdx; i < window - 1; i++) {
+            for (int i = startIdx; i < window; i++) {
                 // input
                 int k = 0;
                 List<String> debugVector = new ArrayList<>(inputColumns());
@@ -234,7 +233,7 @@ public class StockDataSetIterator implements DataSetIterator {
         // MACD
         int chunkMacdSize = IndicatorsUtil.MACD_SLOW_PERIOD + CHUNK_SHIFT;
         int chunkMacdCounter = chunkMacdSize;
-        for (int i = chunkMacdSize; i < candles.size() - 1; i++) {
+        for (int i = chunkMacdSize; i < candles.size(); i++) {
             double[] inClose = new double[chunkMacdSize];
             int k = 0;
             int j = i - chunkMacdSize;
@@ -252,7 +251,7 @@ public class StockDataSetIterator implements DataSetIterator {
         // RSI
         int chunkRsiSize = IndicatorsUtil.RSI_PERIOD + CHUNK_SHIFT;
         int chunkRsiCounter = chunkRsiSize;
-        for (int i = chunkRsiSize; i < candles.size() - 1; i++) {
+        for (int i = chunkRsiSize; i < candles.size(); i++) {
             double[] inClose = new double[chunkRsiSize];
             int k = 0;
             int j = i - chunkRsiSize;
@@ -270,7 +269,7 @@ public class StockDataSetIterator implements DataSetIterator {
         // ADX
         int chunkAdxSize = IndicatorsUtil.ADX_PERIOD + CHUNK_SHIFT;
         int chunkAdxCounter = chunkAdxSize;
-        for (int i = chunkAdxSize; i < candles.size() - 1; i++) {
+        for (int i = chunkAdxSize; i < candles.size();  i++) {
             double[] inClose = new double[chunkAdxSize];
             double[] inHigh = new double[chunkAdxSize];
             double[] inLow = new double[chunkAdxSize];
@@ -291,7 +290,7 @@ public class StockDataSetIterator implements DataSetIterator {
 
         // MA Black
         int chunkMABCounter = IndicatorsUtil.MA_BLACK_PERIOD;
-        for (int i = IndicatorsUtil.MA_BLACK_PERIOD; i < candles.size() - 1; i++) {
+        for (int i = IndicatorsUtil.MA_BLACK_PERIOD; i < candles.size(); i++) {
             double[] inClose = new double[IndicatorsUtil.MA_BLACK_PERIOD];
             int k = 0;
             int j = i - IndicatorsUtil.MA_BLACK_PERIOD;
@@ -308,7 +307,7 @@ public class StockDataSetIterator implements DataSetIterator {
 
         // MA White
         int chunkMAWCounter = IndicatorsUtil.MA_WHITE_PERIOD;
-        for (int i = IndicatorsUtil.MA_WHITE_PERIOD; i < candles.size() - 1; i++) {
+        for (int i = IndicatorsUtil.MA_WHITE_PERIOD; i < candles.size(); i++) {
             double[] inClose = new double[IndicatorsUtil.MA_WHITE_PERIOD];
             int k = 0;
             int j = i - IndicatorsUtil.MA_WHITE_PERIOD;
@@ -325,7 +324,7 @@ public class StockDataSetIterator implements DataSetIterator {
 
         // EMA
         int chunkEmaCounter = IndicatorsUtil.EMA_PERIOD;
-        for (int i = IndicatorsUtil.EMA_PERIOD; i < candles.size() - 1; i++) {
+        for (int i = IndicatorsUtil.EMA_PERIOD; i < candles.size(); i++) {
             double[] inClose = new double[IndicatorsUtil.EMA_PERIOD];
             int k = 0;
             int j = i - IndicatorsUtil.EMA_PERIOD;
@@ -348,7 +347,7 @@ public class StockDataSetIterator implements DataSetIterator {
 
     private void initializeOffsets() {
         exampleStartOffsets.clear();
-        int window = train.size() - LENGTH;
+        int window = train.size() - LENGTH + 1;
         for (int i = 0; i < window; i++) {
             exampleStartOffsets.add(i);
         }
@@ -382,7 +381,7 @@ public class StockDataSetIterator implements DataSetIterator {
                 k++;
                 j--;
             }
-            test.add(new ImmutablePair<>(input, normalize(stockDataList.get(i - j).getPrice(), closes[0], closes[1])));
+            test.add(new Pair<>(input, normalize(stockDataList.get(i - j).getPrice(), closes[0], closes[1])));
             debugVector.add("res " + (i - j) + ": " + stockDataList.get(i - j).getPrice());
             log.trace("TestDataSet " + (i - VECTOR_SIZE_2) + ": " + debugVector);
         }

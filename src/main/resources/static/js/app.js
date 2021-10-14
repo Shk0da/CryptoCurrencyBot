@@ -1,6 +1,5 @@
 feather.replace();
 
-var chartWrapper = '<canvas id="cryptoChart" class="my-4" width="900" height="380"></canvas>';
 var app = angular.module("dashboard", [])
     .controller("mainCtr", function ($scope, $interval, $http) {
 
@@ -15,7 +14,7 @@ var app = angular.module("dashboard", [])
         });
 
         $http.get($scope.locaton + "/api/trading/status").then(function (response) {
-            if (response.data == "on") {
+            if (response.data === "on") {
                 $scope.power = "On"
                 $(".power").css({'color': '#99CC18'});
             } else {
@@ -25,8 +24,8 @@ var app = angular.module("dashboard", [])
         });
 
         $scope.powerOnOff = function () {
-            $http.get($scope.locaton + "/api/trading?active=" + ($scope.power != "On")).then(function (response) {
-                if (response.data == "on") {
+            $http.get($scope.locaton + "/api/trading?active=" + ($scope.power !== "On")).then(function (response) {
+                if (response.data === "on") {
                     $scope.power = "On"
                     $(".power").css({'color': '#99CC18'});
                 } else {
@@ -41,8 +40,9 @@ var app = angular.module("dashboard", [])
         var logRefresh;
         $scope.showLog = function () {
             $("main").addClass("d-none");
-            $("#logArea").removeClass("d-none");
-            $("#logArea").html("Loading, wait...");
+            const logArea = $("#logArea");
+            logArea.removeClass("d-none");
+            logArea.html("Loading, wait...");
 
             logRefresh = $interval(function () {
                 $http.get($scope.locaton + "/api/logging").then(function (response) {
@@ -56,10 +56,11 @@ var app = angular.module("dashboard", [])
                 $interval.cancel(logRefresh);
                 logRefresh = undefined;
             }
-            var market = event.target.hash.replace("#", "");
+            const market = event.target.hash.replace("#", "");
             $("main").addClass("d-none");
-            $("#logArea").html("Loading, wait...");
-            $("#logArea").removeClass("d-none");
+            const logArea = $("#logArea");
+            logArea.html("Loading, wait...");
+            logArea.removeClass("d-none");
             $scope.MarketName = market;
             $scope.AccountInfo = "Loading, wait...";
             $(".chartWrapper").html("");
@@ -91,7 +92,7 @@ var app = angular.module("dashboard", [])
             }
             await sleep(1000);
             $http.get($scope.locaton + "/api/cancel?market=" + marketName + "&symbol=" + symbol + "&orderId=" + id).then(function (response) {
-                if (response.data == "OK") {
+                if (response.data === "OK") {
                     $("#activeOrder-" + marketName + "-" + id).html("");
                 }
             }, function (error) {
