@@ -65,7 +65,7 @@ class TestStrategy implements StrategyService {
         if (BTCUSDT == null || BTCUSD == null) return
 
         // время пары свечей
-        def candleDateTime = BTCUSDT.dateTime.isAfter(BTCUSD.dateTime) ? BTCUSDT.dateTime : BTCUSD.dateTime
+        def candleDateTime = BTCUSDT.dateTime.after(BTCUSD.dateTime) ? BTCUSDT.dateTime : BTCUSD.dateTime
         if (candleDateTime == lastUpdateBtcUsd) return else lastUpdateBtcUsd = candleDateTime
 
         def realDiffBtc = (((BTCUSDT.bid + BTCUSD.ask) / 2) / 100) * diffPercent
@@ -173,7 +173,7 @@ class TestStrategy implements StrategyService {
         if (ETHUSDT == null || ETHUSD == null) return
 
         // время пары свечей
-        def candleDateTime = ETHUSDT.dateTime.isAfter(ETHUSD.dateTime) ? ETHUSDT.dateTime : ETHUSD.dateTime
+        def candleDateTime = ETHUSDT.dateTime.after(ETHUSD.dateTime) ? ETHUSDT.dateTime : ETHUSD.dateTime
         if (candleDateTime == lastUpdateEthUsd) return else lastUpdateEthUsd = candleDateTime
 
         def realDiffEth = (((ETHUSDT.bid + ETHUSD.ask) / 2) / 100) * diffPercent
