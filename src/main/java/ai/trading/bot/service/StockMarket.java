@@ -1,6 +1,6 @@
 package ai.trading.bot.service;
 
-import jdk.internal.jline.internal.Nullable;
+import javax.annotation.Nullable;
 
 public enum StockMarket {
 
