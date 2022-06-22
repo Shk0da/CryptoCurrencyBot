@@ -46,11 +46,18 @@ public class CollectorActor extends UntypedAbstractActor {
                 .getBean(accountServiceName);
         log.debug("{}::{} accountService has been init: {}::{}", market, instrument, accountServiceName, accountService);
 
-        String learnServiceName = market.name().toLowerCase() + "LearnService";
-        learnService = (LearnService) ApplicationContextProvider
+        boolean isLearningEnabled = Boolean.getBoolean(ApplicationContextProvider
                 .getApplicationContext()
-                .getBean(learnServiceName);
-        log.debug("{}::{} learnService has been init: {}::{}", market, instrument, learnServiceName, learnService);
+                .getEnvironment()
+                .getProperty("predictor.learn.enabled", "false"));
+
+        if (isLearningEnabled) {
+            String learnServiceName = market.name().toLowerCase() + "LearnService";
+            learnService = (LearnService) ApplicationContextProvider
+                    .getApplicationContext()
+                    .getBean(learnServiceName);
+            log.debug("{}::{} learnService has been init: {}::{}", market, instrument, learnServiceName, learnService);
+        }
     }
 
     @Override
@@ -66,7 +73,9 @@ public class CollectorActor extends UntypedAbstractActor {
 
                 if (!candles.isEmpty()) {
                     candleRepository.addCandles(instrument, candles);
-                    learnService.addCandles(instrument, candles);
+                    if (null != learnService) {
+                        learnService.addCandles(instrument, candles);
+                    }
                 }
             } catch (Exception ex) {
                 log.error("{}: {}", market, ex.getMessage());

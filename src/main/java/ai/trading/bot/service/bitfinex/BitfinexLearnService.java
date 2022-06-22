@@ -6,9 +6,11 @@ import ai.trading.bot.service.BasicLearnService;
 import ai.trading.bot.service.StockMarket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
 
 @Service("bitfinexLearnService")
+@ConditionalOnExpression("${predictor.learn.enabled:false}")
 public class BitfinexLearnService extends BasicLearnService {
 
     @Autowired

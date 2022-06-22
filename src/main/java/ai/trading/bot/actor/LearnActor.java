@@ -22,6 +22,7 @@ import org.deeplearning4j.util.ModelSerializer;
 import org.joda.time.DateTime;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
@@ -45,6 +46,7 @@ import static java.lang.Double.parseDouble;
 @Slf4j
 @Scope("prototype")
 @Component("learnActor")
+@ConditionalOnExpression("${predictor.learn.enabled:false}")
 public class LearnActor extends UntypedAbstractActor {
 
     private volatile MultiLayerNetwork neuralNetwork;
@@ -61,10 +63,10 @@ public class LearnActor extends UntypedAbstractActor {
     private final double[] maBlacks = new double[5];
     private final double[] maWhites = new double[5];
 
-    @Value("${predictor.learn.interval}")
+    @Value("${predictor.learn.interval:60}")
     private Integer learnInterval;
 
-    @Value("${neuralnetwork.store.disk}")
+    @Value("${neuralnetwork.store.disk:false}")
     private Boolean storeDisk;
 
     private final String locationToSave;
